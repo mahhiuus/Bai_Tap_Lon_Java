@@ -31,7 +31,7 @@ public class LoginUI extends JFrame {
                 new EmptyBorder(18, 18, 18, 18)
         ));
 
-        ImagePanel leftPanel = new ImagePanel("Login.jpg");
+        ImagePanel leftPanel = new ImagePanel("src/image/Login.jpg");
         leftPanel.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
 
         JPanel rightPanel = new JPanel();
@@ -118,7 +118,6 @@ public class LoginUI extends JFrame {
                 if (tk != null) {
                     SessionManager.DangNhap(tk);
                     JOptionPane.showMessageDialog(LoginUI.this, "Đăng nhập thành công! Chào mừng " + tk.getTenDangNhap(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                    // TODO: Mở main UI ở đây
                     dispose(); // Đóng login window
                 } else {
                     JOptionPane.showMessageDialog(LoginUI.this, "Tên đăng nhập hoặc mật khẩu không đúng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -214,17 +213,30 @@ class ImagePanel extends JPanel {
     private Image image;
 
     public ImagePanel(String path) {
-        image = new ImageIcon(path).getImage();
+        ImageIcon icon = new ImageIcon(path);
+        if (icon.getIconWidth() > 0 && icon.getIconHeight() > 0) {
+            image = icon.getImage();
+        } else {
+            image = null;
+            System.err.println("Không tải được ảnh: " + path);
+        }
     }
 
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (image == null) {
+            return;
+        }
 
         int panelWidth = getWidth();
         int panelHeight = getHeight();
 
         int imageWidth = image.getWidth(this);
         int imageHeight = image.getHeight(this);
+
+        if (imageWidth <= 0 || imageHeight <= 0) {
+            return;
+        }
 
         double scale = Math.max((double) panelWidth / imageWidth, (double) panelHeight / imageHeight);
 

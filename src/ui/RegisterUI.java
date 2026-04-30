@@ -176,7 +176,7 @@ public class RegisterUI extends JFrame {
         leftPanel.add(lblBack);
         leftPanel.add(Box.createVerticalGlue());
 
-        ImagePanel rightPanel = new ImagePanel("Login.jpg");
+        ImagePanel rightPanel = new ImagePanel("src/image/Login.jpg");
         rightPanel.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
 
         container.add(leftPanel);
