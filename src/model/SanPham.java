@@ -29,46 +29,46 @@ public class SanPham {
     }
 
     //Pthuc Get
-    public String getmaSP(){ return maSP;}
-    public String gettenSP(){ return tenSP;}
-    public String getloaiSP(){ return loaiSP;}
-    public double getgiaBan(){ return giaBan;}
-    public int getsoLuongTon(){ return soLuongTon;}
-    public String getmaNCC(){ return maNCC;}
+    public String getMaSP(){ return maSP;}
+    public String getTenSP(){ return tenSP;}
+    public String getLoaiSP(){ return loaiSP;}
+    public double getGiaBan(){ return giaBan;}
+    public int getSoLuongTon(){ return soLuongTon;}
+    public String getMaNCC(){ return maNCC;}
 
     //Pthuc set
-    public void setmaSP(String masp){ this.maSP = masp; }
-    public void settenSP(String tensp){
+    public void setMaSP(String maSP){ this.maSP = maSP; }
+    public void setTenSP(String tenSP){
         if (tenSP == null) {
             throw new IllegalArgumentException("Tên sản phẩm không được để trống");
         }
-        this.tenSP = tensp;
+        this.tenSP = tenSP.trim();
     }
-    public void setloaiSP(String loaisp){ 
-        if (loaisp == null || loaisp.trim().isEmpty()) {
+    public void setLoaiSP(String loaiSP){ 
+        if (loaiSP == null || loaiSP.trim().isEmpty()) {
             throw new IllegalArgumentException("Loại sản phẩm không được để trống!");
         }
-        String l = loaisp.trim().toUpperCase(); // Chuyển về chữ hoa để so sánh cho chính xác
+        String l = loaiSP.trim().toUpperCase(); // Chuyển về chữ hoa để so sánh cho chính xác
         if (l.equals("DO_AN") || l.equals("DO_UONG") || l.equals("DUNG_CU")) {
-            loaisp = l;
+            loaiSP = l;
         }else {
              throw new IllegalArgumentException("Loại sản phẩm phải là: DO_AN, DO_UONG hoặc DUNG_CU!");
         }
-        this.loaiSP = loaisp; 
+        this.loaiSP = loaiSP; 
     }
-    public void setgiaBan(double giaban){
-        if (giaban < 0) {
+    public void setGiaBan(double giaBan){
+        if (giaBan < 0) {
         throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
     }
-        this.giaBan = giaban;
+        this.giaBan = giaBan;
     }
-    public void setsoLuongTon(int soluongton){
-        if (soluongton < 0) {
+    public void setSoLuongTon(int soLuongTon){
+        if (soLuongTon < 0) {
         throw new IllegalArgumentException("Số lượng tồn không được nhỏ hơn 0!");
         }
-        this.soLuongTon =  soluongton;
+        this.soLuongTon =  soLuongTon;
     }
-    public void setmaNCC(String mancc){ this.maNCC = mancc; }
+    public void setMaNCC(String maNCC){ this.maNCC = maNCC; }
 
     @Override
     public String toString() {

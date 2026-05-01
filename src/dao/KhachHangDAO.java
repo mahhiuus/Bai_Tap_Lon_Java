@@ -7,26 +7,6 @@ import model.KhachHang;
 
 public class KhachHangDAO {
 
-    public void createTable (){
-        String sql = """
-                CREATE TABLE IF NOT EXISTS khach_hang (
-                ma_kh VARCHAR(10) PRIMARY KEY,
-                ho_ten VARCHAR(50) NOT NULL,
-                sdt VARCHAR(10),
-                dia_chi VARCHAR(100),
-                diem_tich_luy INT,
-                ngay_dang_ky DATE
-                )
-                """;
-        try(Statement stmt = DBConnection.getConnection().createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tạo bảng khách hàng thành công!");
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tạo bảng khách hàng ", e);
-        }
-    }
-
     public void themKhachHang(KhachHang kh) {
         if (kh == null || kh.getMaKH() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");

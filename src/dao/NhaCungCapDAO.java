@@ -7,26 +7,6 @@ import model.NhaCungCap;
 
 public class NhaCungCapDAO {
 
-    public void createTable(){
-        String sql = """
-                CREATE TABLE IF NOT EXISTS  nha_cung_cap(
-                ma_ncc VARCHAR(10) PRIMARY KEY,
-                ten_cong_ty VARCHAR (100) NOT NULL,
-                sdt VARCHAR (10),
-                dia_chi VARCHAR (255),
-                email VARCHAR(100),
-                nguoi_lien_he VARCHAR(100)
-                )
-                """;
-        try(Statement stmt = DBConnection.getConnection().createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tạo bảng nhà cung cấp thành công!");
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tạo bảng nhà cung cấp ", e);
-        }
-    }
-
     public void themNhaCungCap(NhaCungCap ncc) {
         if (ncc == null || ncc.getMaNCC() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");

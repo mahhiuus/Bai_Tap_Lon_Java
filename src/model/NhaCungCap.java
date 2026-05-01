@@ -8,7 +8,23 @@ public class NhaCungCap {
     private String email;
     private String nguoiLienHe;
 
-    public NhaCungCap() {}
+    public NhaCungCap() {
+        maNCC = "";
+        tenCongTy = "";
+        sdt = "";
+        diaChi = "";
+        email = "";
+        nguoiLienHe = "";
+    }
+
+    public NhaCungCap(String maNCC, String tenCongTy, String sdt, String diaChi, String email, String nguoiLienHe) {
+        this.maNCC = maNCC;
+        this.tenCongTy = tenCongTy;
+        this.sdt = sdt;
+        this.diaChi = diaChi;
+        this.email = email;
+        this.nguoiLienHe = nguoiLienHe;
+    }
 
     // Getter và Setter
     public String getMaNCC() { 
