@@ -7,9 +7,6 @@ import java.util.List;
 import model.BanBida;
 
 public class BanBidaDAO {
-
-   
-
     // Phương thức thêm bàn bida
     public void themBan(BanBida ban) {
         if (ban == null || ban.getMaBan() == null || ban.getMaBan().trim().isEmpty()

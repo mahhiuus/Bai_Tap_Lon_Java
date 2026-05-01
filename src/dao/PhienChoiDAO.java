@@ -8,9 +8,6 @@ import java.util.List;
 import model.PhienChoi;
 
 public class PhienChoiDAO {
-
-   
-
     // Phương thức thêm phiên chơi
     public void themPhien(PhienChoi phien) {
         if (phien == null || phien.getMaPhien() == null || phien.getMaPhien().trim().isEmpty()

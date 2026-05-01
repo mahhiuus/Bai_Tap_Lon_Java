@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SanPhamDAO {
-
-
-
     // Chức năng Thêm sản phẩm
     public void themSanPham(SanPham sp) {
         if (sp == null || sp.getMaSP() == null ) {
