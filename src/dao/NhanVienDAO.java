@@ -98,6 +98,7 @@ public class NhanVienDAO {
                 nv.setChucVu(rs.getString("chuc_vu"));
                 nv.setNgaySinh(rs.getDate("ngay_sinh") != null ? rs.getDate("ngay_sinh").toLocalDate() : null);
                 list.add(nv);
+                System.out.println(nv);
             }
         } 
         catch(SQLException e) {

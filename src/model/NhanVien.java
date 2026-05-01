@@ -49,8 +49,8 @@ public class NhanVien {
     }
     public void setSoDienThoai(String soDienThoai) {this.soDienThoai = soDienThoai;}
     public void setGioiTinh(String gioiTinh) {
-        if (gioiTinh != null && !gioiTinh.equals("Nam") && !gioiTinh.equals("Nữ") && !gioiTinh.equals("Khác")) {
-            throw new IllegalArgumentException("Giới tính phải là 'Nam', 'Nữ' hoặc 'Khác'");
+        if (gioiTinh != null && !gioiTinh.equals("Nam") && !gioiTinh.equals("Nu") && !gioiTinh.equals("Khac")) {
+            throw new IllegalArgumentException("Giới tính phải là 'Nam', 'Nu' hoặc 'Khac'");
         }
         this.gioiTinh = gioiTinh;
     }
