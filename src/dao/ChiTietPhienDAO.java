@@ -7,6 +7,22 @@ import java.util.List;
 import model.ChiTietPhien;
 
 public class ChiTietPhienDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_chi_tiet FROM chi_tiet_phien ORDER BY ma_chi_tiet DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_chi_tiet");
+                int soThuTu = Integer.parseInt(maCuoi.substring(2)) + 1;
+                return String.format("CT%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới chi tiết phiên: " + e.getMessage(), e);
+        }
+        return "CT01";
+    }
+
     // Phương thức thêm chi tiết phiên
     public void themChiTietPhien(ChiTietPhien ct) {
         if (ct == null || ct.getMaChiTiet() == null || ct.getMaChiTiet().trim().isEmpty()

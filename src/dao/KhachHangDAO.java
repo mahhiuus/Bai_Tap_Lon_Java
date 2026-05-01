@@ -6,6 +6,22 @@ import java.util.List;
 import model.KhachHang;
 
 public class KhachHangDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_kh FROM khach_hang ORDER BY ma_kh DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_kh");
+                int soThuTu = Integer.parseInt(maCuoi.substring(2)) + 1;
+                return String.format("KH%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới khách hàng: " + e.getMessage(), e);
+        }
+        return "KH01";
+    }
+
     public void themKhachHang(KhachHang kh) {
         if (kh == null || kh.getMaKH() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");
