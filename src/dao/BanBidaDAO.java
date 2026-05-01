@@ -7,6 +7,22 @@ import java.util.List;
 import model.BanBida;
 
 public class BanBidaDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_ban FROM ban_bida ORDER BY ma_ban DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_ban");
+                int soThuTu = Integer.parseInt(maCuoi.substring(1)) + 1;
+                return String.format("B%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới bàn bida: " + e.getMessage(), e);
+        }
+        return "B01";
+    }
+
     // Phương thức thêm bàn bida
     public void themBan(BanBida ban) {
         if (ban == null || ban.getMaBan() == null || ban.getMaBan().trim().isEmpty()

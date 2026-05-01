@@ -6,6 +6,22 @@ import java.util.List;
 import model.NhaCungCap;
 
 public class NhaCungCapDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_ncc FROM nha_cung_cap ORDER BY ma_ncc DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_ncc");
+                int soThuTu = Integer.parseInt(maCuoi.substring(3)) + 1;
+                return String.format("NCC%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới nhà cung cấp: " + e.getMessage(), e);
+        }
+        return "NCC01";
+    }
+
     public void themNhaCungCap(NhaCungCap ncc) {
         if (ncc == null || ncc.getMaNCC() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");

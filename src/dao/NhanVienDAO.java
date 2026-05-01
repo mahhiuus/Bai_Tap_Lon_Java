@@ -7,6 +7,22 @@ import java.util.List;
 import model.NhanVien;
 
 public class NhanVienDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_nv FROM nhan_vien ORDER BY ma_nv DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_nv");
+                int soThuTu = Integer.parseInt(maCuoi.substring(2)) + 1;
+                return String.format("NV%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới nhân viên: " + e.getMessage(), e);
+        }
+        return "NV01";
+    }
+
     //Phương thức thêm nhân viên vào bảng nhan_vien trong mysql
     public void themNhanVien(NhanVien nv) {
         if (nv == null || nv.getMaNV() == null || nv.getTenNV() == null) {

@@ -7,6 +7,22 @@ import java.util.List;
 import model.TaiKhoan;
 
 public class TaiKhoanDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_tk FROM tai_khoan ORDER BY ma_tk DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_tk");
+                int soThuTu = Integer.parseInt(maCuoi.substring(2)) + 1;
+                return String.format("TK%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới tài khoản: " + e.getMessage(), e);
+        }
+        return "TK01";
+    }
+
     //Tạo admin mặc định
     public void taoAdminMacDinh() {
         String kiemtra = "SELECT COUNT(*) FROM tai_khoan WHERE vai_tro = 'ADMIN'";

@@ -8,6 +8,22 @@ import java.util.List;
 import model.PhienChoi;
 
 public class PhienChoiDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_phien FROM phien_choi ORDER BY ma_phien DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_phien");
+                int soThuTu = Integer.parseInt(maCuoi.substring(1)) + 1;
+                return String.format("P%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới phiên chơi: " + e.getMessage(), e);
+        }
+        return "P01";
+    }
+
     // Phương thức thêm phiên chơi
     public void themPhien(PhienChoi phien) {
         if (phien == null || phien.getMaPhien() == null || phien.getMaPhien().trim().isEmpty()

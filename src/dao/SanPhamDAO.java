@@ -6,6 +6,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SanPhamDAO {
+    public String sinhMaMoi() {
+        String sql = "SELECT ma_sp FROM san_pham ORDER BY ma_sp DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String maCuoi = rs.getString("ma_sp");
+                int soThuTu = Integer.parseInt(maCuoi.substring(2)) + 1;
+                return String.format("SP%02d", soThuTu);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi sinh mã mới sản phẩm: " + e.getMessage(), e);
+        }
+        return "SP01";
+    }
+
     // Chức năng Thêm sản phẩm
     public void themSanPham(SanPham sp) {
         if (sp == null || sp.getMaSP() == null ) {
@@ -141,11 +157,28 @@ public class SanPhamDAO {
                     List.add(sp);
                     System.out.println(sp);
                 }
+        }catch (SQLException e) {
+           throw new RuntimeException("Lỗi khi lấy danh sách sản phẩm: " + e.getMessage(), e);
         }
-            catch (SQLException e) {
-                throw new RuntimeException("Lỗi khi lấy danh sách sản phẩm: " + e.getMessage(), e);
-            }
-            return List;
+        return List;
+    }
+
+    public void tangTonKho(String maSP, int soLuong) {
+        String sql = "UPDATE san_pham SET so_luong_ton = so_luong_ton + ? WHERE ma_sp=?";
+        try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, soLuong);
+            ps.setString(2, maSP);
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void giamTonKho(String maSP, int soLuong) {
+        String sql = "UPDATE san_pham SET so_luong_ton = so_luong_ton - ? WHERE ma_sp=?";
+        try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, soLuong);
+            ps.setString(2, maSP);
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
     // public static void main(String[] args) {
