@@ -146,6 +146,7 @@ public class PhienChoiDAO {
             while (rs.next()) {
                 PhienChoi phien = taoPhienChoiTuResultSet(rs);
                 list.add(phien);
+                System.out.println(phien);
             }
 
         } catch (SQLException e) {

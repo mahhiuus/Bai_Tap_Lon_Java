@@ -37,7 +37,7 @@ public class KhachHangDAO {
             stmt.executeUpdate();
         } catch (SQLException e) { 
             throw new RuntimeException(e); 
-    }
+        }
     }
 
     public void capNhatKhachHang(KhachHang kh) {
@@ -71,14 +71,84 @@ public class KhachHangDAO {
                 kh.setDiemTichLuy(rs.getInt("diem_tich_luy"));
                 kh.setNgayDangKy(rs.getDate("ngay_dang_ky").toLocalDate());
                 list.add(kh);
+                System.out.println(kh);
             }
         } catch (SQLException e) { 
             throw new RuntimeException(e); 
         }
         return list;
     }
-    // public static void main(String[] args) {
-    //     KhachHangDAO db = new KhachHangDAO();
-    //     db.createTable();
-    // }
+
+    public KhachHang timTheoMaKhachHang(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) {
+            throw new RuntimeException("Mã khách hàng không được để trống!");
+        }
+        String sql = "SELECT * FROM khach_hang WHERE ma_kh = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, maKH);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    KhachHang kh = new KhachHang();
+                    kh.setMaKH(rs.getString("ma_kh"));
+                    kh.setTenKH(rs.getString("ho_ten"));
+                    kh.setSdt(rs.getString("sdt"));
+                    kh.setDiaChi(rs.getString("dia_chi"));
+                    kh.setDiemTichLuy(rs.getInt("diem_tich_luy"));
+                    Date ngayDangKy = rs.getDate("ngay_dang_ky");
+                    kh.setNgayDangKy(ngayDangKy != null ? ngayDangKy.toLocalDate() : null);
+                    return kh;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi tìm theo mã khách hàng: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public List<KhachHang> timKiem(String keyword) {
+        List<KhachHang> list = new ArrayList<>();
+        String sql = "SELECT * FROM khach_hang WHERE ma_kh LIKE ? OR ho_ten LIKE ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String likeKeyword = "%" + (keyword == null ? "" : keyword) + "%";
+            stmt.setString(1, likeKeyword);
+            stmt.setString(2, likeKeyword);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    KhachHang kh = new KhachHang();
+                    kh.setMaKH(rs.getString("ma_kh"));
+                    kh.setTenKH(rs.getString("ho_ten"));
+                    kh.setSdt(rs.getString("sdt"));
+                    kh.setDiaChi(rs.getString("dia_chi"));
+                    kh.setDiemTichLuy(rs.getInt("diem_tich_luy"));
+                    Date ngayDangKy = rs.getDate("ngay_dang_ky");
+                    kh.setNgayDangKy(ngayDangKy != null ? ngayDangKy.toLocalDate() : null);
+                    list.add(kh);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi tìm kiếm khách hàng: " + e.getMessage(), e);
+        }
+        return list;
+    }
+    public static void main(String[] args) {
+        KhachHangDAO db = new KhachHangDAO();
+        db.getAllKhachHang();
+        NhanVienDAO dao = new NhanVienDAO();
+        dao.layTatCaNhanVien();
+        SanPhamDAO sp = new SanPhamDAO();
+        sp.getAllSanPham();
+        NhaCungCapDAO ncc = new NhaCungCapDAO();
+        ncc.getAllNhaCungCap();
+        TaiKhoanDAO tk = new TaiKhoanDAO();
+        tk.layTatCaTaiKhoan();
+        PhienChoiDAO pc = new PhienChoiDAO();
+        pc.layTatCaPhien();
+        ChiTietPhienDAO ctp = new ChiTietPhienDAO();
+        ctp.layTatCaChiTietPhien();
+        BanBidaDAO bd = new BanBidaDAO();
+        bd.layTatCaBan();
+    }
 }

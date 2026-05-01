@@ -109,6 +109,7 @@ public class ChiTietPhienDAO {
             while (rs.next()) {
                 ChiTietPhien ct = taoChiTietPhienTuResultSet(rs);
                 list.add(ct);
+                System.out.println(ct);
             }
 
         } catch (SQLException e) {

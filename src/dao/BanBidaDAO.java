@@ -132,13 +132,12 @@ public class BanBidaDAO {
 
             while (rs.next()) {
                 BanBida ban = new BanBida();
-
                 ban.setMaBan(rs.getString("ma_ban"));
                 ban.setTenBan(rs.getString("ten_ban"));
                 ban.setLoaiBan(rs.getString("loai_ban"));
                 ban.setTrangThaiBan(rs.getString("trang_thai"));
-
                 list.add(ban);
+                System.out.println(ban);
             }
 
         } catch (SQLException e) {

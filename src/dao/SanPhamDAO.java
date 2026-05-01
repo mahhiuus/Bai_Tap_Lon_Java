@@ -139,6 +139,7 @@ public class SanPhamDAO {
                     sp.setSoLuongTon(rs.getInt("so_luong_ton"));
                     sp.setMaNCC(rs.getString("ma_ncc"));
                     List.add(sp);
+                    System.out.println(sp);
                 }
         }
             catch (SQLException e) {
