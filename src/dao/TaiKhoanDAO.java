@@ -14,7 +14,6 @@ public class TaiKhoanDAO {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(kiemtra)) {
             if(rs.next() && rs.getInt(1) == 0) {
-                // ⚠️ LƯU Ý: Đặt mật khẩu mạnh cho tài khoản ADMIN, không dùng "admin123"
                 String sql = "INSERT INTO tai_khoan (ma_tk, ten_dang_nhap, mat_khau, vai_tro, ma_nv) VALUES ('TK001', 'admin', 'admin123', 'ADMIN', 'NV001')";
                 stmt.executeUpdate(sql);
                 System.out.println("Tạo thành công ADMIN mặc định (Tên đăng nhập: admin / Password: admin123)!");
