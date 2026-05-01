@@ -7,8 +7,6 @@ import java.util.List;
 import model.NhanVien;
 
 public class NhanVienDAO {
-  
-  
     //Phương thức thêm nhân viên vào bảng nhan_vien trong mysql
     public void themNhanVien(NhanVien nv) {
         if (nv == null || nv.getMaNV() == null || nv.getTenNV() == null) {

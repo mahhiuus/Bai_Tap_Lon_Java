@@ -8,7 +8,6 @@ public class DBConnection {
 
     private static final String URL = "jdbc:mysql://localhost:3306/CLB_bia?useUnicode=true&characterEncoding=UTF-8";
     private static final String USERNAME = "root";
-    // ⚠️ LƯU Ý: Thay đổi mật khẩu MySQL của bạn ở đây
     private static final String PASSWORD = "123456";
 
     public static Connection getConnection() {

@@ -6,7 +6,6 @@ import java.util.List;
 import model.KhachHang;
 
 public class KhachHangDAO {
-
     public void themKhachHang(KhachHang kh) {
         if (kh == null || kh.getMaKH() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");

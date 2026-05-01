@@ -6,7 +6,6 @@ import java.util.List;
 import model.NhaCungCap;
 
 public class NhaCungCapDAO {
-
     public void themNhaCungCap(NhaCungCap ncc) {
         if (ncc == null || ncc.getMaNCC() == null) {
             throw new IllegalArgumentException("Dữ liệu không hợp lệ");

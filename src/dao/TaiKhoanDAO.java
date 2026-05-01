@@ -7,8 +7,6 @@ import java.util.List;
 import model.TaiKhoan;
 
 public class TaiKhoanDAO {
-
-
     //Tạo admin mặc định
     public void taoAdminMacDinh() {
         String kiemtra = "SELECT COUNT(*) FROM tai_khoan WHERE vai_tro = 'ADMIN'";

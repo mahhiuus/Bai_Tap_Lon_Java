@@ -7,8 +7,6 @@ import java.util.List;
 import model.ChiTietPhien;
 
 public class ChiTietPhienDAO {
-
-   
     // Phương thức thêm chi tiết phiên
     public void themChiTietPhien(ChiTietPhien ct) {
         if (ct == null || ct.getMaChiTiet() == null || ct.getMaChiTiet().trim().isEmpty()
