@@ -7,27 +7,8 @@ import java.util.List;
 import model.NhanVien;
 
 public class NhanVienDAO {
-    //Phương thức tạo bảng nhân viên trong mysql
-    public void createTable() {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS nhan_vien (
-                ma_nv       VARCHAR(10) PRIMARY KEY,
-                ho_ten      VARCHAR(100) NOT NULL,
-                sdt         VARCHAR(15),
-                gioi_tinh   VARCHAR(10),
-                chuc_vu     VARCHAR(50),
-                ngay_sinh   DATE
-            )
-        """;
-        try(Statement stmt = DBConnection.getConnection().createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tạo bảng nhân viên thành công!");
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tạo bảng nhân viên " + e.getMessage(), e);
-        }
-    }
-
+  
+  
     //Phương thức thêm nhân viên vào bảng nhan_vien trong mysql
     public void themNhanVien(NhanVien nv) {
         if (nv == null || nv.getMaNV() == null || nv.getTenNV() == null) {

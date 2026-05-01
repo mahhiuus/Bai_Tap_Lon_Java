@@ -7,31 +7,11 @@ import java.util.List;
 
 public class SanPhamDAO {
 
-    //tao bang san pham
-    public void createTable() {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS san_pham (
-                ma_sp        VARCHAR(10) PRIMARY KEY,
-                ten_sp       VARCHAR(100) NOT NULL,
-                loai         ENUM('DO_AN', 'DO_UONG', 'DUNG_CU') NOT NULL,
-                gia_ban      DOUBLE NOT NULL,
-                so_luong_ton INT DEFAULT 0,
-                ma_ncc       VARCHAR(10),
-                FOREIGN KEY (ma_ncc) REFERENCES nha_cung_cap(ma_ncc)
-            )
-        """;
-        try(Statement stmt = DBConnection.getConnection().createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tao bang san pham thanh cong!");
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tạo bảng san pham " + e.getMessage(), e);
-        }
-    }
+
 
     // Chức năng Thêm sản phẩm
     public void themSanPham(SanPham sp) {
-        if (sp == null || sp.getmaSP() == null ) {
+        if (sp == null || sp.getMaSP() == null ) {
             throw new IllegalArgumentException("Mã sản phẩm  không được để trống!");
         }
         String sql = "INSERT INTO san_pham (ma_sp, ten_sp, loai, gia_ban, so_luong_ton, ma_ncc) VALUES (?, ?, ?, ?, ?, ?)";
@@ -39,15 +19,15 @@ public class SanPhamDAO {
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
         
-            stmt.setString(1, sp.getmaSP()); 
-            stmt.setString(2, sp.gettenSP());
-            stmt.setString(3, sp.getloaiSP());
-            stmt.setDouble(4, sp.getgiaBan());
-            stmt.setInt(5, sp.getsoLuongTon());
-            stmt.setString(6, sp.getmaNCC());
+            stmt.setString(1, sp.getMaSP()); 
+            stmt.setString(2, sp.getTenSP());
+            stmt.setString(3, sp.getLoaiSP());
+            stmt.setDouble(4, sp.getGiaBan());
+            stmt.setInt(5, sp.getSoLuongTon());
+            stmt.setString(6, sp.getMaNCC());
         
             stmt.executeUpdate();
-            System.out.println("Thêm sản phẩm " + sp.getmaSP() + " thành công!");
+            System.out.println("Thêm sản phẩm " + sp.getMaSP() + " thành công!");
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi thêm sản phẩm: " + e.getMessage(), e);
         }
@@ -71,18 +51,18 @@ public class SanPhamDAO {
 
     //Chuc nang CAP NHAT san pham
     public void capNhatSanPham(SanPham sp){
-        if(sp == null || sp.getmaSP() == null ){
+        if(sp == null || sp.getMaSP() == null ){
             throw new IllegalArgumentException("San pham hoac ma san pham khong duoc de trong!");
         }
         String sql = "UPDATE san_pham SET ten_sp = ?, loai = ?, gia_ban = ?, so_luong_ton = ?, ma_ncc = ? WHERE ma_sp = ?";
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-                stmt.setString(1, sp.gettenSP());
-                stmt.setString(2, sp.getloaiSP());
-                stmt.setDouble(3, sp.getgiaBan());
-                stmt.setInt(4, sp.getsoLuongTon());
-                stmt.setString(5, sp.getmaNCC());
-                stmt.setString(6, sp.getmaSP());
+                stmt.setString(1, sp.getTenSP());
+                stmt.setString(2, sp.getLoaiSP());
+                stmt.setDouble(3, sp.getGiaBan());
+                stmt.setInt(4, sp.getSoLuongTon());
+                stmt.setString(5, sp.getMaNCC());
+                stmt.setString(6, sp.getMaSP());
 
                 stmt.executeUpdate();
                 System.out.println("Cap nhat san pham thanh cong!");
@@ -105,12 +85,12 @@ public class SanPhamDAO {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 SanPham sp = new SanPham();
-                sp.setmaSP(rs.getString("ma_sp"));
-                sp.settenSP(rs.getString("ten_sp"));
-                sp.setloaiSP(rs.getString("loai"));
-                sp.setgiaBan(rs.getDouble("gia_ban"));
-                sp.setsoLuongTon(rs.getInt("so_luong_ton"));
-                sp.setmaNCC(rs.getString("ma_ncc"));
+                sp.setMaSP(rs.getString("ma_sp"));
+                sp.setTenSP(rs.getString("ten_sp"));
+                sp.setLoaiSP(rs.getString("loai"));
+                sp.setGiaBan(rs.getDouble("gia_ban"));
+                sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                sp.setMaNCC(rs.getString("ma_ncc"));
                 ds.add(sp);
             }
         } catch (Exception e) {
@@ -131,12 +111,12 @@ public class SanPhamDAO {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 SanPham sp = new SanPham();
-                sp.setmaSP(rs.getString("ma_sp"));
-                sp.settenSP(rs.getString("ten_sp"));
-                sp.setloaiSP(rs.getString("loai"));
-                sp.setgiaBan(rs.getDouble("gia_ban"));
-                sp.setsoLuongTon(rs.getInt("so_luong_ton"));
-                sp.setmaNCC(rs.getString("ma_ncc"));
+                sp.setMaSP(rs.getString("ma_sp"));
+                sp.setTenSP(rs.getString("ten_sp"));
+                sp.setLoaiSP(rs.getString("loai"));
+                sp.setGiaBan(rs.getDouble("gia_ban"));
+                sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                sp.setMaNCC(rs.getString("ma_ncc"));
                 ds.add(sp);
             }
         } catch (Exception e) {
@@ -155,12 +135,12 @@ public class SanPhamDAO {
             ResultSet rs = stmt.executeQuery(sql)){
                 while (rs.next()) {
                     SanPham sp = new SanPham();
-                    sp.setmaSP(rs.getString("ma_sp")); // Lấy dữ liệu dạng String
-                    sp.settenSP(rs.getString("ten_sp"));
-                    sp.setloaiSP(rs.getString("loai"));
-                    sp.setgiaBan(rs.getDouble("gia_ban"));
-                    sp.setsoLuongTon(rs.getInt("so_luong_ton"));
-                    sp.setmaNCC(rs.getString("ma_ncc"));
+                    sp.setMaSP(rs.getString("ma_sp")); // Lấy dữ liệu dạng String
+                    sp.setTenSP(rs.getString("ten_sp"));
+                    sp.setLoaiSP(rs.getString("loai"));
+                    sp.setGiaBan(rs.getDouble("gia_ban"));
+                    sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                    sp.setMaNCC(rs.getString("ma_ncc"));
                     List.add(sp);
                 }
         }

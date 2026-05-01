@@ -45,7 +45,7 @@ public class KhachHang {
         if (tenKH == null || tenKH.trim().isEmpty()) {
             throw new IllegalArgumentException("Ten khach hang khong duoc de trong!");
         }
-        this.tenKH = tenKH;
+        this.tenKH = tenKH.trim();
     }
 
     public String getSdt() {

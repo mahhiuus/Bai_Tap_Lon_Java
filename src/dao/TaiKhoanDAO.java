@@ -7,26 +7,7 @@ import java.util.List;
 import model.TaiKhoan;
 
 public class TaiKhoanDAO {
-    //Phương thức tạo bảng tài khoản trong mysql
-    public void createTable() {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS tai_khoan (
-                ma_tk           VARCHAR(10) PRIMARY KEY,
-                ten_dang_nhap   VARCHAR(50) NOT NULL,
-                mat_khau        VARCHAR(100) NOT NULL,
-                vai_tro         VARCHAR(10) NOT NULL DEFAULT 'NHANVIEN',
-                ma_nv           VARCHAR(50),
-                FOREIGN KEY (ma_nv) REFERENCES nhan_vien(ma_nv)
-            )
-        """;
-        try(Statement stmt = DBConnection.getConnection().createStatement()) {
-            stmt.execute(sql);
-            System.out.println("Tạo bảng tài khoản thành công!");
-        }
-        catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tạo bảng tài khoản " + e.getMessage(), e);
-        }
-    }
+
 
     //Tạo admin mặc định
     public void taoAdminMacDinh() {
@@ -35,9 +16,11 @@ public class TaiKhoanDAO {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(kiemtra)) {
             if(rs.next() && rs.getInt(1) == 0) {
+                // ⚠️ LƯU Ý: Đặt mật khẩu mạnh cho tài khoản ADMIN, không dùng "admin123"
                 String sql = "INSERT INTO tai_khoan (ma_tk, ten_dang_nhap, mat_khau, vai_tro, ma_nv) VALUES ('TK001', 'admin', 'admin123', 'ADMIN', 'NV001')";
                 stmt.executeUpdate(sql);
                 System.out.println("Tạo thành công ADMIN mặc định (Tên đăng nhập: admin / Password: admin123)!");
+                System.out.println(" Vui lòng đổi mật khẩu ADMIN ngay sau khi đăng nhập lần đầu!");
             }
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi tạo tài khoản ADMIN mặc định " + e.getMessage(), e);
@@ -46,7 +29,8 @@ public class TaiKhoanDAO {
 
     //Phương thức thêm tài khoản vào bảng tai_khoan trong mysql
     public void themTaiKhoan(TaiKhoan tk) {
-        if (tk == null || tk.getTenDangNhap() == null || tk.getMatKhau() == null) {
+        if (tk == null || tk.getTenDangNhap() == null || tk.getTenDangNhap().trim().isEmpty() 
+                || tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
             throw new IllegalArgumentException("Tài khoản hoặc các trường bắt buộc không được để trống");
         }
         String sql = "INSERT INTO tai_khoan (ma_tk, ten_dang_nhap, mat_khau, vai_tro, ma_nv) VALUES (?, ?, ?, ?, ?)";
