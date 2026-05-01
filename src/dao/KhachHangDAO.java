@@ -142,6 +142,7 @@ public class KhachHangDAO {
                     Date ngayDangKy = rs.getDate("ngay_dang_ky");
                     kh.setNgayDangKy(ngayDangKy != null ? ngayDangKy.toLocalDate() : null);
                     list.add(kh);
+                    System.out.println(kh);
                 }
             }
         } catch (SQLException e) {
