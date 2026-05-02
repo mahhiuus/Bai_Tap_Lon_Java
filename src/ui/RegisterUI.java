@@ -43,6 +43,8 @@ public class RegisterUI extends JFrame {
         lblSub.setForeground(Color.GRAY);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        
+
         JLabel lblName = new JLabel("Full name");
         lblName.setFont(new Font("Arial", Font.BOLD, 18));
         lblName.setAlignmentX(Component.LEFT_ALIGNMENT);
