@@ -84,6 +84,7 @@ public class SanPhamDAO {
             }
     }
 
+    //TÌM KIẾM SP theo tên
     public List<SanPham> timKiemTheoTen(String ten) {
         List<SanPham> ds = new ArrayList<>();
         // Câu lệnh SQL với toán tử LIKE để tìm kiếm gần đúng
@@ -112,6 +113,7 @@ public class SanPhamDAO {
         return ds;
     }
 
+    //TÌM KIẾM SP theo mã
     public List<SanPham> timKiemTheoMa(String ma) {
         List<SanPham> ds = new ArrayList<>();
         String sql = "SELECT * FROM san_pham WHERE ma_sp = ?";
