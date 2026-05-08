@@ -1,4 +1,5 @@
 package ui;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -153,11 +154,11 @@ public class LoginUI extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 lblRegister.setForeground(mainColor);
             }
+            
             public void mouseClicked(MouseEvent e) {
                new RegisterUI().setVisible(true);
-               setVisible(false);
+               dispose(); // Đổi thành dispose() cho đồng bộ và giải phóng bộ nhớ
             }
-            
         });
 
         lblForgot.addMouseListener(new MouseAdapter() {
@@ -176,6 +177,13 @@ public class LoginUI extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 lblForgot.setForeground(mainColor);
             }
+            
+            // --- ĐÂY LÀ ĐOẠN CODE ĐÃ ĐƯỢC THÊM VÀO ---
+            public void mouseClicked(MouseEvent e) {
+                new ForgotPasswordUI().setVisible(true);
+                dispose(); // Đóng màn hình Login
+            }
+            // ----------------------------------------
         });
 
         rightPanel.add(lblTitle);
@@ -195,6 +203,7 @@ public class LoginUI extends JFrame {
         rightPanel.add(lblForgot);
         rightPanel.add(Box.createVerticalStrut(15));
         rightPanel.add(lblRegister);
+        
         container.add(leftPanel);
         container.add(rightPanel);
 
@@ -222,6 +231,7 @@ class ImagePanel extends JPanel {
         }
     }
 
+    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (image == null) {
