@@ -140,6 +140,33 @@ public class SanPhamDAO {
         return ds;
     }
 
+    // Lấy sản phẩm theo mã duy nhất
+    public SanPham layTheoId(String ma) {
+        if (ma == null || ma.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM san_pham WHERE ma_sp = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ma);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSP(rs.getString("ma_sp"));
+                sp.setTenSP(rs.getString("ten_sp"));
+                sp.setLoaiSP(rs.getString("loai"));
+                sp.setGiaBan(rs.getDouble("gia_ban"));
+                sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                sp.setMaNCC(rs.getString("ma_ncc"));
+                return sp;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     //Lay tat ca san pham
     public List<SanPham> getAllSanPham(){
         List<SanPham> List = new ArrayList<>();
