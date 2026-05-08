@@ -53,7 +53,7 @@ public class HoaDonNhapDAO {
     // XÓA hóa đơn nhập
     public void xoaHoaDonNhap(String maHDN) {
         if (maHDN == null || maHDN.trim().isEmpty()) {
-            throw new IllegalArgumentException("Bạn chưa nhập mã hóa đơn cần xóa!");
+            throw new IllegalArgumentException("Bạn chưa nhập mã hóa đơn nhập cần xóa!");
         }
         String sql = "DELETE FROM hoa_don_nhap WHERE ma_hdn = ?";
         try (Connection conn = DBConnection.getConnection();

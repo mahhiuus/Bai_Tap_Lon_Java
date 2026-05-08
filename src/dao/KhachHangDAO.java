@@ -1,8 +1,11 @@
 package dao;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import model.HoaDonBan;
 import model.KhachHang;
 
 public class KhachHangDAO {
@@ -151,21 +154,33 @@ public class KhachHangDAO {
         return list;
     }
     public static void main(String[] args) {
-        KhachHangDAO db = new KhachHangDAO();
-        db.getAllKhachHang();
-        NhanVienDAO dao = new NhanVienDAO();
-        dao.layTatCaNhanVien();
-        SanPhamDAO sp = new SanPhamDAO();
-        sp.getAllSanPham();
-        NhaCungCapDAO ncc = new NhaCungCapDAO();
-        ncc.getAllNhaCungCap();
-        TaiKhoanDAO tk = new TaiKhoanDAO();
-        tk.layTatCaTaiKhoan();
-        PhienChoiDAO pc = new PhienChoiDAO();
-        pc.layTatCaPhien();
-        ChiTietPhienDAO ctp = new ChiTietPhienDAO();
-        ctp.layTatCaChiTietPhien();
-        BanBidaDAO bd = new BanBidaDAO();
-        bd.layTatCaBan();
+        HoaDonBanDAO dao = new HoaDonBanDAO();
+
+        System.out.println("=== Test getAllHoaDonBan() ===");
+        dao.getAllHoaDonBan().forEach(System.out::println);
+
+        System.out.println("=== Test layTheoId() ===");
+        HoaDonBan hdb1 = dao.layTheoId("HDB001");
+        System.out.println(hdb1 != null ? hdb1 : "Không tìm thấy HDB001");
+
+        System.out.println("=== Test layTheoNgay() ===");
+        dao.layTheoNgay(LocalDate.now().minusDays(7), LocalDate.now())
+            .forEach(System.out::println);
+
+        System.out.println("=== Test layTheoKhachHang() ===");
+        dao.layTheoKhachHang("KH01").forEach(System.out::println);
+
+        System.out.println("=== Test layTheoNhanVien() ===");
+        dao.layTheoNhanVien("NV01").forEach(System.out::println);
+
+        System.out.println("=== Test layTopHoaDon() ===");
+        dao.layTopHoaDon(5).forEach(System.out::println);
+
+        System.out.println("=== Test layTopHoaDonTheoNgay() ===");
+        dao.layTopHoaDonTheoNgay(LocalDate.now(), 5).forEach(System.out::println);
+
+        System.out.println("=== Test layTopHoaDonTheoThang() ===");
+        dao.layTopHoaDonTheoThang(LocalDate.now().getMonthValue(), LocalDate.now().getYear(), 5)
+            .forEach(System.out::println);
     }
 }

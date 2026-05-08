@@ -36,6 +36,12 @@ public class ChiTietHoaDonBan {
     public void setDonGiaBan(double donGiaBan) { this.donGiaBan = donGiaBan; }
 
     public String toString() {
-        return "ChiTiet HDB " + maHDB + " - SP " + maSP + " - SL " + soLuong;
+        return "ChiTietHoaDonBan {" +
+               "maChiTiet: " + maChiTiet + '\'' +
+               ", maHDB: '" + maHDB +
+               ", maSP: " + maSP +
+               ", soLuong: " + soLuong +
+               ", donGiaBan: " + donGiaBan +
+               "}";
     }
 }
