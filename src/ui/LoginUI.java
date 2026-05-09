@@ -131,6 +131,28 @@ public class LoginUI extends JFrame {
         lblForgot.setForeground(normalLinkColor);
         lblForgot.setCursor(new Cursor(Cursor.HAND_CURSOR));
         lblForgot.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblForgot.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                lblForgot.setForeground(mainColor);
+            }
+
+            public void mouseExited(MouseEvent e) {
+                lblForgot.setForeground(normalLinkColor);
+            }
+
+            public void mousePressed(MouseEvent e) {
+                lblForgot.setForeground(clickColor);
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                lblForgot.setForeground(mainColor);
+            }
+            
+            public void mouseClicked(MouseEvent e) {
+               new ForgotPasswordUI().setVisible(true);
+               dispose();
+            }
+        });
 
         JLabel lblRegister = new JLabel("Don't have an account? Register here.");
         lblRegister.setFont(new Font("Arial", Font.PLAIN, 13));

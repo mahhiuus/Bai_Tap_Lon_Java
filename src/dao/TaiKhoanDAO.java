@@ -214,6 +214,42 @@ public class TaiKhoanDAO {
         return null;
     }
 
+    // --- PHƯƠNG THỨC THÊM MỚI ---
+
+    // Phương thức kiểm tra tên đăng nhập đã tồn tại chưa (Dùng cho RegisterUI)
+    public boolean kiemTraTenDangNhapTonTai(String tenDangNhap) {
+        String sql = "SELECT COUNT(*) FROM tai_khoan WHERE ten_dang_nhap = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tenDangNhap);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Trả về true nếu count > 0 (đã tồn tại)
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Phương thức đặt lại mật khẩu bằng tên đăng nhập (Dùng cho ForgotPasswordUI)
+    public boolean datLaiMatKhau(String tenDangNhap, String matKhauMoi) {
+        String sql = "UPDATE tai_khoan SET mat_khau = ? WHERE ten_dang_nhap = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, matKhauMoi);
+            stmt.setString(2, tenDangNhap);
+            
+            // Nếu executeUpdate() > 0 nghĩa là có dòng được cập nhật thành công
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+}
     // public static void main(String[] args) {
     //     TaiKhoanDAO dao = new TaiKhoanDAO();
     // //     TaiKhoan tk = new TaiKhoan();
@@ -229,4 +265,4 @@ public class TaiKhoanDAO {
     // //     // dao.doiMatKhau("TK002", "manhhieu27");
         
     // }
-}
+
