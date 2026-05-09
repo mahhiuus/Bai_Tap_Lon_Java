@@ -58,6 +58,16 @@ public class HoaDonBan {
     public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
 
     public String toString() {
-        return "HĐB " + maHDB + " - " + ngayBan.toString();
+        return "HoaDonBan {" +
+               "maHDB: " + maHDB +
+               ", maPhien: " + maPhien +
+               ", maKH: " + maKH +
+               ", maNV: " + maNV +
+               ", ngayBan: " + ngayBan +
+               ", tienBida: " + tienBida +
+               ", tienSanPham: " + tienSanPham +
+               ", tongTien: " + tongTien +
+               ", ghiChu: " + ghiChu +
+               "}";
     }
 }
