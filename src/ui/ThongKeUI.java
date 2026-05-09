@@ -3,7 +3,6 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,13 +19,10 @@ import org.knowm.xchart.style.Styler.LegendPosition;
 // Import DAO
 import dao.ThongKeDao;
 
-public class ThongKeUI extends JFrame {
+// Đổi từ JFrame sang JPanel
+public class ThongKeUI extends JPanel {
 
-    private Color mainColor = new Color(17, 126, 141);
-    private Color bgColor = new Color(240, 242, 245); 
-    private Color cardColor = Color.WHITE;
-
-    private ThongKeDao ThongKeDao;
+    private ThongKeDao thongKeDao;
     private DecimalFormat currencyFormat;
     
     // Khai báo các container chứa chart để update khi lọc
@@ -38,43 +34,36 @@ public class ThongKeUI extends JFrame {
     private JComboBox<Integer> cbNam;
 
     public ThongKeUI() {
-        ThongKeDao = new ThongKeDao();
+        thongKeDao = new ThongKeDao();
         currencyFormat = new DecimalFormat("#,### VNĐ");
 
-        setTitle("Dashboard Analytics - Billard Management System");
-        setSize(1200, 750); 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
-
-        add(createNavBar(), BorderLayout.WEST);
-
-        JPanel mainContent = new JPanel(new BorderLayout(20, 20));
-        mainContent.setBackground(bgColor);
-        mainContent.setBorder(new EmptyBorder(25, 30, 25, 30));
+        setLayout(new BorderLayout(20, 20));
+        setBackground(LuxuryTheme.CREAM); // Nền màu Cream
+        setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // HEADER
         JLabel lblHeader = new JLabel("Tổng quan kinh doanh của quán Billard");
         lblHeader.setFont(new Font("Arial", Font.BOLD, 26));
-        lblHeader.setForeground(new Color(40, 40, 40));
-        mainContent.add(lblHeader, BorderLayout.NORTH);
+        lblHeader.setForeground(LuxuryTheme.NAVY);
+        add(lblHeader, BorderLayout.NORTH);
 
         JPanel centerArea = new JPanel(new BorderLayout(0, 25));
-        centerArea.setBackground(bgColor);
+        centerArea.setBackground(LuxuryTheme.CREAM);
 
-        // --- 4 THẺ SỐ LIỆU TỪ DATABASE ---
+        // --- 4 THẺ SỐ LIỆU TỪ DATABASE THEO STYLE LUXURY ---
         JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 20, 0));
-        cardsPanel.setBackground(bgColor);
+        cardsPanel.setBackground(LuxuryTheme.CREAM);
 
-        String dtThangNay = currencyFormat.format(ThongKeDao.getDoanhThuThangHienTai());
-        String hdThangNay = String.valueOf(ThongKeDao.getSoHoaDonThangHienTai());
-        String khThangNay = String.valueOf(ThongKeDao.getKhachHangMoiThangHienTai());
-        String banHoatDong = String.valueOf(ThongKeDao.getSoBanDangHoatDong());
+        String dtThangNay = currencyFormat.format(thongKeDao.getDoanhThuThangHienTai());
+        String hdThangNay = String.valueOf(thongKeDao.getSoHoaDonThangHienTai());
+        String khThangNay = String.valueOf(thongKeDao.getKhachHangMoiThangHienTai());
+        String banHoatDong = String.valueOf(thongKeDao.getSoBanDangHoatDong());
 
-        cardsPanel.add(createStatCard("Doanh thu tháng này", dtThangNay, "Tính đến hôm nay", new Color(46, 204, 113)));
-        cardsPanel.add(createStatCard("Số hóa đơn tháng này", hdThangNay, "Đã thanh toán", new Color(52, 152, 219)));
-        cardsPanel.add(createStatCard("Khách hàng mới (Tháng)", khThangNay, "Tài khoản đăng ký mới", new Color(155, 89, 182)));
-        cardsPanel.add(createStatCard("Bàn đang hoạt động", banHoatDong, "Trạng thái DANG_CHOI", new Color(230, 126, 34)));
+        // Sử dụng Icon Emoji đã được thu nhỏ
+        cardsPanel.add(createStatCard("Doanh thu tháng", dtThangNay,"💰" ));
+        cardsPanel.add(createStatCard("Số hóa đơn tháng", hdThangNay, "📄"));
+        cardsPanel.add(createStatCard("Khách hàng mới", khThangNay, "👤"));
+        cardsPanel.add(createStatCard("Bàn đang hoạt động", banHoatDong, "🎱"));
         
         centerArea.add(cardsPanel, BorderLayout.NORTH);
 
@@ -82,6 +71,7 @@ public class ThongKeUI extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
         tabbedPane.setBackground(Color.WHITE);
+        tabbedPane.setForeground(LuxuryTheme.NAVY);
         tabbedPane.setFocusable(false);
         
         tabbedPane.addTab("Doanh số theo ngày", createTabTheoNgay());
@@ -89,8 +79,7 @@ public class ThongKeUI extends JFrame {
 
         centerArea.add(tabbedPane, BorderLayout.CENTER);
 
-        mainContent.add(centerArea, BorderLayout.CENTER);
-        add(mainContent, BorderLayout.CENTER);
+        add(centerArea, BorderLayout.CENTER);
     }
 
     /**
@@ -117,13 +106,7 @@ public class ThongKeUI extends JFrame {
         txtDenNgay.setFont(new Font("Arial", Font.PLAIN, 14));
         filterPanel.add(txtDenNgay);
 
-      JButton btnLoc = new JButton("Lọc");
-btnLoc.setBackground(mainColor);
-btnLoc.setForeground(Color.WHITE);
-btnLoc.setFocusPainted(false);
-btnLoc.setCursor(new Cursor(Cursor.HAND_CURSOR));
-btnLoc.setOpaque(true); 
-btnLoc.setBorderPainted(false);
+        JButton btnLoc = LuxuryTheme.createButton("Lọc", LuxuryTheme.TEAL, Color.WHITE);
         btnLoc.addActionListener(e -> {
             try {
                 LocalDate start = LocalDate.parse(txtTuNgay.getText().trim(), dtf);
@@ -159,17 +142,12 @@ btnLoc.setBorderPainted(false);
 
         filterPanel.add(new JLabel("Chọn năm:"));
         int currentYear = LocalDate.now().getYear();
-        Integer[] years = {currentYear, currentYear - 1, currentYear - 2}; // Cho chọn 3 năm gần nhất
+        Integer[] years = {currentYear, currentYear - 1, currentYear - 2}; 
         cbNam = new JComboBox<>(years);
         cbNam.setFont(new Font("Arial", Font.PLAIN, 14));
         filterPanel.add(cbNam);
 
-        JButton btnLoc = new JButton("Lọc");
-        btnLoc.setBackground(mainColor);
-        btnLoc.setForeground(Color.WHITE);
-        btnLoc.setFocusPainted(false);
-        btnLoc.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+        JButton btnLoc = LuxuryTheme.createButton("Lọc", LuxuryTheme.TEAL, Color.WHITE);
         btnLoc.addActionListener(e -> {
             int selectedYear = (Integer) cbNam.getSelectedItem();
             loadChartDataThang(selectedYear);
@@ -190,24 +168,24 @@ btnLoc.setBorderPainted(false);
      * VẼ BIỂU ĐỒ THEO NGÀY
      */
     private void loadChartDataNgay(LocalDate tuNgay, LocalDate denNgay) {
-        List<Map<String, Object>> data = ThongKeDao.getDuLieuBieuDoTheoNgay(tuNgay, denNgay);
+        List<Map<String, Object>> data = thongKeDao.getDuLieuBieuDoTheoNgay(tuNgay, denNgay);
         List<String> xData = new ArrayList<>();
-        List<Double> yTiềnBida = new ArrayList<>();
-        List<Double> yTiềnSP = new ArrayList<>();
+        List<Double> yTienBida = new ArrayList<>();
+        List<Double> yTienSP = new ArrayList<>();
 
         if (data.isEmpty()) {
-            xData.add("Không có DL"); yTiềnBida.add(0.0); yTiềnSP.add(0.0);
+            xData.add("Không có DL"); yTienBida.add(0.0); yTienSP.add(0.0);
         } else {
             for (Map<String, Object> row : data) {
                 xData.add((String) row.get("ngay_ban_label"));
-                yTiềnBida.add((Double) row.get("tien_bida"));
-                yTiềnSP.add((Double) row.get("tien_sp"));
+                yTienBida.add((Double) row.get("tien_bida"));
+                yTienSP.add((Double) row.get("tien_sp"));
             }
         }
 
         CategoryChart chart = taoKhungBieuDo("Doanh thu từ " + tuNgay + " đến " + denNgay, "Ngày");
-        chart.addSeries("Tiền Bida", xData, yTiềnBida);
-        chart.addSeries("Tiền Sản Phẩm", xData, yTiềnSP);
+        chart.addSeries("Tiền Bida", xData, yTienBida);
+        chart.addSeries("Tiền Sản Phẩm", xData, yTienSP);
 
         chartContainerNgay.removeAll();
         chartContainerNgay.add(new XChartPanel<>(chart), BorderLayout.CENTER);
@@ -219,24 +197,24 @@ btnLoc.setBorderPainted(false);
      * VẼ BIỂU ĐỒ THEO THÁNG
      */
     private void loadChartDataThang(int nam) {
-        List<Map<String, Object>> data = ThongKeDao.getDuLieuBieuDoTheoThang(nam);
+        List<Map<String, Object>> data = thongKeDao.getDuLieuBieuDoTheoThang(nam);
         List<String> xData = new ArrayList<>();
-        List<Double> yTiềnBida = new ArrayList<>();
-        List<Double> yTiềnSP = new ArrayList<>();
+        List<Double> yTienBida = new ArrayList<>();
+        List<Double> yTienSP = new ArrayList<>();
 
         if (data.isEmpty()) {
-            xData.add("Không có DL"); yTiềnBida.add(0.0); yTiềnSP.add(0.0);
+            xData.add("Không có DL"); yTienBida.add(0.0); yTienSP.add(0.0);
         } else {
             for (Map<String, Object> row : data) {
                 xData.add((String) row.get("thang_label"));
-                yTiềnBida.add((Double) row.get("tien_bida"));
-                yTiềnSP.add((Double) row.get("tien_sp"));
+                yTienBida.add((Double) row.get("tien_bida"));
+                yTienSP.add((Double) row.get("tien_sp"));
             }
         }
 
         CategoryChart chart = taoKhungBieuDo("Doanh thu năm " + nam, "Tháng");
-        chart.addSeries("Tiền Bida", xData, yTiềnBida);
-        chart.addSeries("Tiền Sản Phẩm", xData, yTiềnSP);
+        chart.addSeries("Tiền Bida", xData, yTienBida);
+        chart.addSeries("Tiền Sản Phẩm", xData, yTienSP);
 
         chartContainerThang.removeAll();
         chartContainerThang.add(new XChartPanel<>(chart), BorderLayout.CENTER);
@@ -245,7 +223,7 @@ btnLoc.setBorderPainted(false);
     }
 
     /**
-     * Cấu hình form chuẩn dùng chung cho 2 loại biểu đồ (Giúp code đỡ bị lặp)
+     * Cấu hình form chuẩn dùng chung cho XChart
      */
     private CategoryChart taoKhungBieuDo(String title, String xAxisTitle) {
         CategoryChart chart = new CategoryChartBuilder().width(800).height(350).title(title)
@@ -256,118 +234,47 @@ btnLoc.setBorderPainted(false);
         chart.getStyler().setPlotGridLinesColor(new Color(230, 230, 230));
         chart.getStyler().setChartBackgroundColor(Color.WHITE);
         chart.getStyler().setPlotBackgroundColor(Color.WHITE);
-        chart.getStyler().setSeriesColors(new Color[] { mainColor, new Color(241, 196, 15) }); 
+        // PHỐI MÀU BIỂU ĐỒ: Màu Navy (Tiền bida) và Vàng Gold (Sản phẩm)
+        chart.getStyler().setSeriesColors(new Color[] { LuxuryTheme.NAVY, LuxuryTheme.GOLD }); 
         return chart;
     }
 
-    // ==============================================================
-    // PHẦN BÊN DƯỚI GIỮ NGUYÊN (Thanh Nav Bar, Card Thống Kê, Main)
-    // ==============================================================
-
-    private JPanel createNavBar() {
-        JPanel navBar = new JPanel();
-        navBar.setLayout(new BoxLayout(navBar, BoxLayout.Y_AXIS));
-        navBar.setBackground(Color.WHITE);
-        navBar.setPreferredSize(new Dimension(220, getHeight()));
-        navBar.setBorder(new MatteBorder(0, 0, 0, 1, new Color(220, 220, 220))); 
-
-        JLabel lblLogo = new JLabel("BIDA SYSTEM");
-        lblLogo.setFont(new Font("Arial", Font.BOLD, 20));
-        lblLogo.setForeground(mainColor);
-        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblLogo.setBorder(new EmptyBorder(30, 0, 40, 0));
-        navBar.add(lblLogo);
-
-        String[] menuItems = {"Tổng quan", "Sản phẩm", "Hóa đơn", "Khách hàng", "Cài đặt", "Đăng xuất"};
-        
-        for (String item : menuItems) {
-            JButton btnMenu = new JButton(item);
-            btnMenu.setFont(new Font("Arial", Font.BOLD, 15));
-            btnMenu.setForeground(new Color(80, 80, 80));
-            btnMenu.setBackground(Color.WHITE);
-            btnMenu.setFocusPainted(false);
-            btnMenu.setBorderPainted(false);
-            btnMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btnMenu.setMaximumSize(new Dimension(220, 50));
-            btnMenu.setHorizontalAlignment(SwingConstants.LEFT);
-            btnMenu.setBorder(new EmptyBorder(0, 30, 0, 0));
-            btnMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            if (item.equals("Tổng quan")) {
-                btnMenu.setForeground(mainColor);
-                btnMenu.setBackground(new Color(235, 245, 245));
-                btnMenu.setBorder(new CompoundBorder(
-                        new MatteBorder(0, 4, 0, 0, mainColor), 
-                        new EmptyBorder(0, 26, 0, 0)
-                ));
-            }
-
-            btnMenu.addMouseListener(new MouseAdapter() {
-                public void mouseEntered(MouseEvent e) {
-                    if (!item.equals("Tổng quan")) {
-                        btnMenu.setBackground(new Color(245, 245, 245));
-                        btnMenu.setForeground(mainColor);
-                    }
-                }
-                public void mouseExited(MouseEvent e) {
-                    if (!item.equals("Tổng quan")) {
-                        btnMenu.setBackground(Color.WHITE);
-                        btnMenu.setForeground(new Color(80, 80, 80));
-                    }
-                }
-                public void mouseClicked(MouseEvent e) {
-                    if (item.equals("Đăng xuất")) {
-                        int confirm = JOptionPane.showConfirmDialog(ThongKeUI.this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-                        if (confirm == JOptionPane.YES_OPTION) {
-                            new LoginUI().setVisible(true);
-                            dispose();
-                        }
-                    }
-                }
-            });
-            navBar.add(btnMenu);
-            navBar.add(Box.createVerticalStrut(5));
-        }
-        navBar.add(Box.createVerticalGlue()); 
-        return navBar;
-    }
-
-    private JPanel createStatCard(String title, String value, String subText, Color trendColor) {
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(cardColor);
+    /**
+     * Tạo Thẻ thông số chuẩn Luxury
+     */
+    private JPanel createStatCard(String title, String value, String fontAwesomeIcon) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(Color.WHITE);
+        // Viền bóng mỏng, nền cùng màu tổng thể
         card.setBorder(new CompoundBorder(
-                new LineBorder(new Color(220, 220, 220), 1),
-                new EmptyBorder(20, 20, 20, 20)
+            BorderFactory.createLineBorder(new Color(0, 0, 0, 30), 1),
+            new EmptyBorder(25, 25, 25, 25)
         ));
 
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setBackground(Color.WHITE);
+
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblTitle.setForeground(Color.GRAY);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTitle.setForeground(new Color(100, 100, 100));
 
         JLabel lblValue = new JLabel(value);
         lblValue.setFont(new Font("Arial", Font.BOLD, 22));
-        lblValue.setForeground(new Color(40, 40, 40));
+        lblValue.setForeground(LuxuryTheme.NAVY); // Chữ màu NAVY
 
-        JLabel lblSub = new JLabel(subText);
-        lblSub.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblSub.setForeground(trendColor);
+        textPanel.add(lblTitle);
+        textPanel.add(Box.createVerticalStrut(10));
+        textPanel.add(lblValue);
 
-        card.add(lblTitle);
-        card.add(Box.createVerticalStrut(10));
-        card.add(lblValue);
-        card.add(Box.createVerticalStrut(15));
-        card.add(lblSub);
+        // Icon Emoji được thu nhỏ xuống size 31
+        JLabel lblIcon = new JLabel(fontAwesomeIcon);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 30)); 
+        lblIcon.setForeground(LuxuryTheme.GOLD);
+
+        card.add(textPanel, BorderLayout.WEST);
+        card.add(lblIcon, BorderLayout.EAST);
 
         return card;
-    }
-
-    public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } 
-        catch (Exception e) { e.printStackTrace(); }
-
-        SwingUtilities.invokeLater(() -> {
-            new ThongKeUI().setVisible(true);
-        });
     }
 }
