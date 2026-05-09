@@ -1,8 +1,13 @@
 package ui;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+
+// Import các class Backend
+import dao.TaiKhoanDAO;
+import model.TaiKhoan;
 
 public class RegisterUI extends JFrame {
 
@@ -42,19 +47,6 @@ public class RegisterUI extends JFrame {
         lblSub.setFont(new Font("Arial", Font.PLAIN, 14));
         lblSub.setForeground(Color.GRAY);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel lblName = new JLabel("Full name");
-        lblName.setFont(new Font("Arial", Font.BOLD, 18));
-        lblName.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtName = new JTextField();
-        txtName.setFont(new Font("Arial", Font.PLAIN, 18));
-        txtName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        txtName.setBorder(new CompoundBorder(
-                new LineBorder(new Color(200, 200, 200), 1),
-                new EmptyBorder(2,6,2,6)
-        ));
-        txtName.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblUser = new JLabel("Username");
         lblUser.setFont(new Font("Arial", Font.BOLD, 18));
@@ -105,20 +97,56 @@ public class RegisterUI extends JFrame {
         btnRegister.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         btnRegister.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                btnRegister.setBackground(hoverColor);
-            }
+            public void mouseEntered(MouseEvent e) { btnRegister.setBackground(hoverColor); }
+            public void mouseExited(MouseEvent e) { btnRegister.setBackground(mainColor); }
+            public void mousePressed(MouseEvent e) { btnRegister.setBackground(clickColor); }
+            public void mouseReleased(MouseEvent e) { btnRegister.setBackground(hoverColor); }
+        });
 
-            public void mouseExited(MouseEvent e) {
-                btnRegister.setBackground(mainColor);
-            }
+      
+        btnRegister.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String username = txtUser.getText().trim();
+                String password = new String(txtPass.getPassword());
+                String confirmPass = new String(txtConfirm.getPassword());
 
-            public void mousePressed(MouseEvent e) {
-                btnRegister.setBackground(clickColor);
-            }
+                // 1. Kiểm tra trống
+                if (username.isEmpty() || password.isEmpty() || confirmPass.isEmpty()) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, "Vui lòng nhập đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-            public void mouseReleased(MouseEvent e) {
-                btnRegister.setBackground(hoverColor);
+                // 2. Kiểm tra mật khẩu khớp nhau
+                if (!password.equals(confirmPass)) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, "Mật khẩu xác nhận không khớp!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                TaiKhoanDAO dao = new TaiKhoanDAO();
+
+                // 3. Kiểm tra trùng lặp tên đăng nhập
+                if (dao.kiemTraTenDangNhapTonTai(username)) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                try {
+                    // 4. Tạo đối tượng TaiKhoan mới
+                    // Sinh mã tự động
+                    String maTKMoi = dao.sinhMaMoi();
+                    // maNV để null tạm
+                    TaiKhoan tkMoi = new TaiKhoan(maTKMoi, username, password, "NHANVIEN", null);
+
+                    // 5. Thêm vào database
+                    dao.themTaiKhoan(tkMoi);
+
+                    JOptionPane.showMessageDialog(RegisterUI.this, "Đăng ký thành công! Vui lòng đăng nhập.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                    new LoginUI().setVisible(true);
+                    dispose(); // Đóng form đăng ký
+
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, "Đăng ký thất bại: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -129,25 +157,13 @@ public class RegisterUI extends JFrame {
         lblBack.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblBack.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                lblBack.setForeground(mainColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                lblBack.setForeground(normalLinkColor);
-            }
-
-            public void mousePressed(MouseEvent e) {
-                lblBack.setForeground(clickColor);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                lblBack.setForeground(mainColor);
-            }
-
+            public void mouseEntered(MouseEvent e) { lblBack.setForeground(mainColor); }
+            public void mouseExited(MouseEvent e) { lblBack.setForeground(normalLinkColor); }
+            public void mousePressed(MouseEvent e) { lblBack.setForeground(clickColor); }
+            public void mouseReleased(MouseEvent e) { lblBack.setForeground(mainColor); }
             public void mouseClicked(MouseEvent e) {
-               new LoginUI();
-            setVisible(false);
+                new LoginUI().setVisible(true);
+                dispose(); 
             }
         });
 
@@ -155,22 +171,22 @@ public class RegisterUI extends JFrame {
         leftPanel.add(Box.createVerticalStrut(10));
         leftPanel.add(lblSub);
         leftPanel.add(Box.createVerticalStrut(25));
-        // leftPanel.add(lblName);
-        // leftPanel.add(Box.createVerticalStrut(8));
-        // leftPanel.add(txtName);
-        // leftPanel.add(Box.createVerticalStrut(15));
+        
         leftPanel.add(lblUser);
         leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(txtUser);
         leftPanel.add(Box.createVerticalStrut(15));
+        
         leftPanel.add(lblPass);
         leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(txtPass);
         leftPanel.add(Box.createVerticalStrut(15));
+        
         leftPanel.add(lblConfirm);
         leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(txtConfirm);
         leftPanel.add(Box.createVerticalStrut(25));
+        
         leftPanel.add(btnRegister);
         leftPanel.add(Box.createVerticalStrut(12));
         leftPanel.add(lblBack);
@@ -187,10 +203,4 @@ public class RegisterUI extends JFrame {
 
         setVisible(true);
     }
-
-    // public static void main(String[] args) {
-    //     new RegisterUI();
-    // }
 }
-
-

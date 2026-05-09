@@ -1,10 +1,12 @@
 package ui;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+
+// Import DAO để thao tác Database
+import dao.TaiKhoanDAO;
 
 public class ForgotPasswordUI extends JFrame {
 
@@ -13,155 +15,155 @@ public class ForgotPasswordUI extends JFrame {
     }
 
     private void initComponents() {
-        // Cài đặt cơ bản cho JFrame
-        setTitle("Forgot Password - Billiard Management System");
-        setSize(850, 550);
+        setTitle("Forgot Password - Billard Management System");
+        setSize(1000, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Hiển thị ở giữa màn hình
-        setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
 
-        // --- PANEL CHÍNH CHIA ĐÔI MÀN HÌNH ---
-        JPanel mainPanel = new JPanel(new GridLayout(1, 2));
+        Color mainColor = new Color(17, 126, 141);
+        Color hoverColor = new Color(14, 100, 112);
+        Color clickColor = new Color(10, 80, 90);
+        Color normalLinkColor = new Color(120, 120, 120);
 
-        // 1. PANEL TRÁI: Chứa hình ảnh
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBackground(Color.BLACK);
-        // TODO: Đổi lại đường dẫn hình ảnh cho khớp với project của bạn (thư mục src/image/...)
-        // Lấy cùng hình ảnh với LoginUI để đồng bộ
-        try {
-            ImageIcon icon = new ImageIcon("src/image/Login.jpg"); 
-            // Scale hình ảnh cho vừa vặn
-            Image img = icon.getImage().getScaledInstance(425, 550, Image.SCALE_SMOOTH);
-            JLabel imageLabel = new JLabel(new ImageIcon(img));
-            leftPanel.add(imageLabel, BorderLayout.CENTER);
-        } catch (Exception e) {
-            JLabel placeholder = new JLabel("Image Placeholder", SwingConstants.CENTER);
-            placeholder.setForeground(Color.WHITE);
-            leftPanel.add(placeholder, BorderLayout.CENTER);
-        }
+        JPanel bgPanel = new JPanel(new BorderLayout());
+        bgPanel.setBackground(new Color(235, 232, 245));
+        bgPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        // 2. PANEL PHẢI: Chứa Form Quên Mật Khẩu
+        JPanel container = new JPanel(new GridLayout(1, 2, 20, 0));
+        container.setBackground(Color.WHITE);
+        container.setBorder(new CompoundBorder(
+                new LineBorder(new Color(220, 220, 220), 1),
+                new EmptyBorder(18, 18, 18, 18)
+        ));
+
+        ImagePanel leftPanel = new ImagePanel("src/image/Login.jpg");
+        leftPanel.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+
         JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(Color.WHITE);
-        rightPanel.setBorder(new EmptyBorder(40, 50, 40, 50));
-        rightPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 0, 5, 0); // Khoảng cách giữa các phần tử
-        gbc.weightx = 1.0;
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(40, 25, 40, 25));
 
-        // Màu chủ đạo (Lấy từ màu nút Login của bạn)
-        Color primaryColor = new Color(22, 129, 133); 
-
-        // Tiêu đề
         JLabel lblTitle = new JLabel("Forgot Password?");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblTitle.setForeground(primaryColor);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        rightPanel.add(lblTitle, gbc);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
+        lblTitle.setForeground(mainColor);
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Subtitle
-        JLabel lblSubtitle = new JLabel("Enter your username to reset your password.");
-        lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblSubtitle.setForeground(Color.GRAY);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 25, 0);
-        rightPanel.add(lblSubtitle, gbc);
+        JLabel lblSub = new JLabel("Enter your username to reset your password.");
+        lblSub.setFont(new Font("Arial", Font.PLAIN, 14));
+        lblSub.setForeground(Color.GRAY);
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Username Label & Textfield
-        JLabel lblUsername = new JLabel("Username / Email");
-        lblUsername.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        gbc.gridy = 2;
-        gbc.insets = new Insets(5, 0, 5, 0);
-        rightPanel.add(lblUsername, gbc);
+        JLabel lblUser = new JLabel("Username / Email");
+        lblUser.setFont(new Font("Arial", Font.BOLD, 18));
+        lblUser.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JTextField txtUsername = new JTextField();
-        txtUsername.setPreferredSize(new Dimension(300, 35));
-        txtUsername.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        gbc.gridy = 3;
-        rightPanel.add(txtUsername, gbc);
+        JTextField txtUser = new JTextField();
+        txtUser.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtUser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
+        txtUser.setBorder(new CompoundBorder(
+                new LineBorder(new Color(200, 200, 200), 1),
+                new EmptyBorder(12, 16, 12, 16)
+        ));
+        txtUser.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // New Password Label & Textfield
-        JLabel lblNewPassword = new JLabel("New Password");
-        lblNewPassword.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        gbc.gridy = 4;
-        gbc.insets = new Insets(15, 0, 5, 0);
-        rightPanel.add(lblNewPassword, gbc);
+        JLabel lblPass = new JLabel("New Password");
+        lblPass.setFont(new Font("Arial", Font.BOLD, 18));
+        lblPass.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPasswordField txtNewPassword = new JPasswordField();
-        txtNewPassword.setPreferredSize(new Dimension(300, 35));
-        txtNewPassword.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        gbc.gridy = 5;
-        gbc.insets = new Insets(5, 0, 5, 0);
-        rightPanel.add(txtNewPassword, gbc);
+        JPasswordField txtPass = new JPasswordField();
+        txtPass.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
+        txtPass.setBorder(new CompoundBorder(
+                new LineBorder(new Color(200, 200, 200), 1),
+                new EmptyBorder(12, 16, 12, 16)
+        ));
+        txtPass.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Nút Reset Password
         JButton btnReset = new JButton("Reset Password");
-        btnReset.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnReset.setBackground(primaryColor);
+        btnReset.setFont(new Font("Arial", Font.BOLD, 18));
         btnReset.setForeground(Color.WHITE);
+        btnReset.setBackground(mainColor);
+        btnReset.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
         btnReset.setFocusPainted(false);
         btnReset.setBorderPainted(false);
-        btnReset.setPreferredSize(new Dimension(300, 40));
-        btnReset.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        gbc.gridy = 6;
-        gbc.insets = new Insets(25, 0, 15, 0);
-        rightPanel.add(btnReset, gbc);
+        btnReset.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Quay lại màn hình Login
-        JLabel lblBackToLogin = new JLabel("Back to Login");
-        lblBackToLogin.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblBackToLogin.setForeground(Color.GRAY);
-        lblBackToLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // Căn giữa cho nút Back to Login
-        lblBackToLogin.setHorizontalAlignment(SwingConstants.LEFT); 
-        gbc.gridy = 7;
-        gbc.insets = new Insets(5, 0, 0, 0);
-        rightPanel.add(lblBackToLogin, gbc);
+        btnReset.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnReset.setBackground(hoverColor); }
+            public void mouseExited(MouseEvent e) { btnReset.setBackground(mainColor); }
+            public void mousePressed(MouseEvent e) { btnReset.setBackground(clickColor); }
+            public void mouseReleased(MouseEvent e) { btnReset.setBackground(hoverColor); }
+        });
 
-        // Thêm sự kiện Click cho nút Back to Login
-        lblBackToLogin.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // Đóng màn hình hiện tại và mở lại LoginUI
-                dispose();
+        // --- KẾT NỐI BACKEND Ở ĐÂY ---
+        btnReset.addActionListener(e -> {
+            String username = txtUser.getText().trim();
+            String newPassword = new String(txtPass.getPassword());
+
+            if (username.isEmpty() || newPassword.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ Username và Mật khẩu mới!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            TaiKhoanDAO dao = new TaiKhoanDAO();
+            
+            // Gọi hàm datLaiMatKhau vừa thêm
+            boolean isSuccess = dao.datLaiMatKhau(username, newPassword);
+
+            if (isSuccess) {
+                JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 new LoginUI().setVisible(true);
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                lblBackToLogin.setForeground(primaryColor); // Đổi màu khi hover
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                lblBackToLogin.setForeground(Color.GRAY);
+                dispose(); 
+            } else {
+                JOptionPane.showMessageDialog(this, "Tên đăng nhập không tồn tại hoặc có lỗi xảy ra!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Ghép 2 panel vào mainPanel
-        mainPanel.add(leftPanel);
-        mainPanel.add(rightPanel);
+        JLabel lblBackToLogin = new JLabel("Back to Login");
+        lblBackToLogin.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblBackToLogin.setForeground(normalLinkColor);
+        lblBackToLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblBackToLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Thêm mainPanel vào Frame
-        add(mainPanel, BorderLayout.CENTER);
+        lblBackToLogin.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { lblBackToLogin.setForeground(mainColor); }
+            public void mouseExited(MouseEvent e) { lblBackToLogin.setForeground(normalLinkColor); }
+            public void mousePressed(MouseEvent e) { lblBackToLogin.setForeground(clickColor); }
+            public void mouseReleased(MouseEvent e) { lblBackToLogin.setForeground(mainColor); }
+            public void mouseClicked(MouseEvent e) {
+                new LoginUI().setVisible(true);
+                dispose(); 
+            }
+        });
+
+        rightPanel.add(lblTitle);
+        rightPanel.add(Box.createVerticalStrut(10));
+        rightPanel.add(lblSub);
+        rightPanel.add(Box.createVerticalStrut(35));
+        
+        rightPanel.add(lblUser);
+        rightPanel.add(Box.createVerticalStrut(8));
+        rightPanel.add(txtUser);
+        rightPanel.add(Box.createVerticalStrut(20));
+        
+        rightPanel.add(lblPass);
+        rightPanel.add(Box.createVerticalStrut(8));
+        rightPanel.add(txtPass);
+        rightPanel.add(Box.createVerticalStrut(30));
+        
+        rightPanel.add(btnReset);
+        rightPanel.add(Box.createVerticalStrut(15));
+        rightPanel.add(lblBackToLogin);
+
+        container.add(leftPanel);
+        container.add(rightPanel);
+
+        bgPanel.add(container, BorderLayout.CENTER);
+        add(bgPanel);
     }
 
-    // Hàm main để test thử giao diện chạy độc lập
     public static void main(String[] args) {
-        // Thiết lập giao diện nhìn giống hệ điều hành hơn (Flat design)
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         SwingUtilities.invokeLater(() -> {
             new ForgotPasswordUI().setVisible(true);
         });
