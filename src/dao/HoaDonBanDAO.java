@@ -8,17 +8,31 @@ import model.HoaDonBan;
 import model.PhienChoi;
 
 public class HoaDonBanDAO {
+    
+    // --- THUẬT TOÁN SINH MÃ MỚI THÔNG MINH, KHÔNG BAO GIỜ BỊ TRÙNG LẶP ---
     public String sinhMaMoi() {
-        String sql = "SELECT ma_hdb FROM hoa_don_ban ORDER BY ma_hdb DESC LIMIT 1";
-        try(Statement stmt = DBConnection.getConnection().createStatement();
+        String sql = "SELECT ma_hdb FROM hoa_don_ban";
+        int maxId = 0;
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            if(rs.next()) {
-                String maCuoi = rs.getString("ma_hdb");
-                int soThuTu = Integer.parseInt(maCuoi.substring(3)) + 1;
-                return String.format("HDB%03d", soThuTu);
+            while (rs.next()) {
+                String ma = rs.getString("ma_hdb");
+                if (ma != null && ma.startsWith("HDB")) {
+                    try {
+                        // Tách toàn bộ chữ, chỉ lấy phần số để so sánh toán học
+                        int id = Integer.parseInt(ma.replaceAll("[^0-9]", ""));
+                        if (id > maxId) {
+                            maxId = id;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
             }
-        } catch(SQLException e) { e.printStackTrace(); }
-        return "HDB001";
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Cộng 1 vào ID lớn nhất tìm được
+        return String.format("HDB%03d", maxId + 1);
     }
 
     // Tạo hóa đơn bán từ phiên chơi với thông tin khách hàng, nhân viên và tiền bida
@@ -47,7 +61,7 @@ public class HoaDonBanDAO {
             stmt.setString(9, hdb.getGhiChu());
             stmt.executeUpdate();
 
-            System.out.println("Thêm hoá đơn bán thành công!");
+            System.out.println("Thêm hoá đơn bán thành công! Mã: " + hdb.getMaHDB());
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi thêm hóa đơn bán: " + e.getMessage(), e);
         }
@@ -66,13 +80,13 @@ public class HoaDonBanDAO {
             if (ketQua > 0) {System.out.println("Xóa hóa đơn bán thành công!");} 
             else {System.out.println("Không tìm thấy mã hóa đơn để xóa.");}
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi xóa hóa đơn nhập: " + e.getMessage(), e); 
+            throw new RuntimeException("Lỗi khi xóa hóa đơn bán: " + e.getMessage(), e); 
         }
     }
 
     public List<HoaDonBan> getAllHoaDonBan() {
         List<HoaDonBan> ds = new ArrayList<>();
-        String sql = "SELECT * FROM hoa_don_ban";
+        String sql = "SELECT * FROM hoa_don_ban ORDER BY ma_hdb DESC";
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -95,7 +109,6 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
             
                 ds.add(hdb);
-                System.out.println(hdb);
             } 
         } catch (SQLException e) { 
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán: " + e.getMessage(), e);
@@ -120,7 +133,6 @@ public class HoaDonBanDAO {
                 hdb.setTienSanPham(rs.getDouble("tien_san_pham"));
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
-                System.out.println(hdb);
                 return hdb;
             }
         } catch (SQLException e) {
@@ -148,9 +160,7 @@ public class HoaDonBanDAO {
                 hdb.setTienSanPham(rs.getDouble("tien_san_pham"));
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
-                System.out.println(hdb);
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo ngày: " + e.getMessage(), e);
@@ -177,7 +187,6 @@ public class HoaDonBanDAO {
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) { 
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo khách hàng: " + e.getMessage(), e);
@@ -204,7 +213,6 @@ public class HoaDonBanDAO {
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo nhân viên: " + e.getMessage(), e);
@@ -231,7 +239,6 @@ public class HoaDonBanDAO {
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo top: " + e.getMessage(), e);
@@ -259,7 +266,6 @@ public class HoaDonBanDAO {
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo ngày: " + e.getMessage(), e);
@@ -292,7 +298,6 @@ public class HoaDonBanDAO {
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
-                System.out.println(hdb);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo tháng: " + e.getMessage(), e);
