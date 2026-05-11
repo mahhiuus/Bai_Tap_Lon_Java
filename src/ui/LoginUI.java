@@ -119,7 +119,8 @@ public class LoginUI extends JFrame {
                 if (tk != null) {
                     SessionManager.DangNhap(tk);
                     JOptionPane.showMessageDialog(LoginUI.this, "Đăng nhập thành công! Chào mừng " + tk.getTenDangNhap(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                    dispose(); // Đóng login window
+                    dispose();
+                    new MainDashboardUI().setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(LoginUI.this, "Tên đăng nhập hoặc mật khẩu không đúng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
