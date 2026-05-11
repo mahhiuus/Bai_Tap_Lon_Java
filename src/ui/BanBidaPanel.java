@@ -32,7 +32,6 @@ public class BanBidaPanel extends JPanel {
         add(createFormPanel(), BorderLayout.WEST);
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // Tải dữ liệu và mã mới lần đầu
         refreshForm();
     }
 
@@ -49,20 +48,20 @@ public class BanBidaPanel extends JPanel {
         gbc.insets = new Insets(15, 10, 15, 10);
         gbc.weightx = 1.0;
 
-        // Mã Bàn (Read-only vì tự động sinh)
-        gbc.gridy = 0; form.add(new JLabel("Mã Bàn:"), gbc);
+        // Mã Bàn 
+        gbc.gridy = 0; form.add(createLabel("Mã Bàn:"), gbc);
         txtMaBan = LuxuryTheme.createTextField();
         txtMaBan.setEditable(false);
         txtMaBan.setBackground(new Color(240, 240, 240));
         gbc.gridy = 1; form.add(txtMaBan, gbc);
 
         // Tên Bàn
-        gbc.gridy = 2; form.add(new JLabel("Tên Bàn:"), gbc);
+        gbc.gridy = 2; form.add(createLabel("Tên Bàn:"), gbc);
         txtTenBan = LuxuryTheme.createTextField();
         gbc.gridy = 3; form.add(txtTenBan, gbc);
 
         // Loại Bàn
-        gbc.gridy = 4; form.add(new JLabel("Loại Bàn:"), gbc);
+        gbc.gridy = 4; form.add(createLabel("Loại Bàn:"), gbc);
         cbLoaiBan = new JComboBox<>(new String[]{"THUONG", "VIP"});
         cbLoaiBan.setFont(new Font("Arial", Font.PLAIN, 15));
         cbLoaiBan.setBackground(Color.WHITE);
@@ -76,7 +75,6 @@ public class BanBidaPanel extends JPanel {
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
 
-        // --- XỬ LÝ SỰ KIỆN THÊM ---
         btnAdd.addActionListener(e -> {
             try {
                 String ten = txtTenBan.getText().trim();
@@ -93,7 +91,6 @@ public class BanBidaPanel extends JPanel {
             }
         });
 
-        // --- XỬ LÝ SỰ KIỆN SỬA ---
         btnEdit.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row < 0) {
@@ -112,7 +109,6 @@ public class BanBidaPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
         });
 
-        // --- XỬ LÝ SỰ KIỆN XÓA ---
         btnDelete.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row < 0) return;
@@ -149,12 +145,11 @@ public class BanBidaPanel extends JPanel {
 
         tableModel = new DefaultTableModel(new String[]{"Mã Bàn", "Tên Bàn", "Loại", "Trạng Thái"}, 0);
         table = new JTable(tableModel);
-        table.setRowHeight(45); // Tăng padding dòng theo yêu cầu
+        table.setRowHeight(40); // ĐỒNG BỘ 40px
         table.getTableHeader().setBackground(LuxuryTheme.NAVY);
         table.getTableHeader().setForeground(LuxuryTheme.GOLD);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         
-        // Sự kiện click vào bảng đổ lên form
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -172,15 +167,19 @@ public class BanBidaPanel extends JPanel {
         return panel;
     }
 
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Arial", Font.BOLD, 14));
+        lbl.setForeground(LuxuryTheme.NAVY);
+        return lbl;
+    }
+
     private void refreshForm() {
-        // Tải lại danh sách từ DB
         tableModel.setRowCount(0);
         List<BanBida> list = dao.layTatCaBan();
         for (BanBida b : list) {
             tableModel.addRow(new Object[]{b.getMaBan(), b.getTenBan(), b.getLoaiBan(), b.getTrangThaiBan()});
         }
-        
-        // Làm trống form và sinh mã mới
         txtMaBan.setText(dao.sinhMaMoi());
         txtTenBan.setText("");
         cbLoaiBan.setSelectedIndex(0);

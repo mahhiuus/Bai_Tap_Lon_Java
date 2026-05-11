@@ -67,13 +67,13 @@ public class SoDoBanPanel extends JPanel {
         mainGrid.setLayout(new BoxLayout(mainGrid, BoxLayout.Y_AXIS));
         mainGrid.setOpaque(false);
 
-        pnlNormal = new JPanel(new GridLayout(0, 5, 20, 20));
+        pnlNormal = new JPanel(new GridLayout(0, 4, 20, 20));
         pnlNormal.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.NAVY, 2), " KHU VỰC BÀN THƯỜNG (50.000đ/h) ", 
             TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
         pnlNormal.setOpaque(false);
 
-        pnlVip = new JPanel(new GridLayout(0, 5, 20, 20));
+        pnlVip = new JPanel(new GridLayout(0, 4, 20, 20));
         pnlVip.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.GOLD, 2), " KHU VỰC BÀN VIP (80.000đ/h) ", 
             TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.GOLD));

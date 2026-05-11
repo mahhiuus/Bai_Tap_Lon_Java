@@ -104,6 +104,8 @@ public class MainDashboardUI extends JFrame {
                     case "Quản Lý Bàn Bida": centerContentPanel.add(new BanBidaPanel(), BorderLayout.CENTER); break;
                     case "Sơ đồ Bàn": centerContentPanel.add(new SoDoBanPanel(), BorderLayout.CENTER); break;
                     case "Hóa đơn": centerContentPanel.add(new HoaDonPanel(), BorderLayout.CENTER); break;
+                    case "Sản phẩm": centerContentPanel.add(new SanPhamPanel(), BorderLayout.CENTER); break;
+                    case "Nhân viên": centerContentPanel.add(new NhanVienPanel(), BorderLayout.CENTER); break;
                     // Các case khác bạn nhét Panel vào đây
                     default: centerContentPanel.add(new JPanel(), BorderLayout.CENTER); break;
                 }
