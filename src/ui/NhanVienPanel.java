@@ -1,28 +1,34 @@
 package ui;
 
-import dao.NhaCungCapDAO;
-import model.NhaCungCap;
+import dao.NhanVienDAO;
+import model.NhanVien;
+import com.toedter.calendar.JDateChooser; 
 
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class NhaCungCapPanel extends JPanel {
-    private JTextField txtMaNCC, txtTenCongTy, txtSDT, txtDiaChi, txtEmail, txtNguoiLienHe, txtSearch;
+public class NhanVienPanel extends JPanel {
+    private JTextField txtMaNV, txtTenNV, txtSDT, txtSearch;
+    private JComboBox<String> cbGioiTinh, cbChucVu;
+    private JDateChooser dateChooser;
     private DefaultTableModel tableModel;
     private JTable table;
-    private NhaCungCapDAO dao;
+    private NhanVienDAO dao;
 
-    public NhaCungCapPanel() {
-        dao = new NhaCungCapDAO();
+    public NhanVienPanel() {
+        dao = new NhanVienDAO();
         setLayout(new BorderLayout(20, 20));
         setBackground(LuxuryTheme.CREAM);
         setBorder(new EmptyBorder(30, 40, 30, 40));
 
-        JLabel lblHeader = new JLabel("Quản Lý Nhà Cung Cấp");
+        JLabel lblHeader = new JLabel("Quản Lý Nhân Viên");
         lblHeader.setFont(new Font("Arial", Font.BOLD, 28));
         lblHeader.setForeground(LuxuryTheme.NAVY);
         add(lblHeader, BorderLayout.NORTH);
@@ -38,43 +44,51 @@ public class NhaCungCapPanel extends JPanel {
         form.setBackground(LuxuryTheme.CREAM);
         form.setPreferredSize(new Dimension(350, 0));
         form.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Nhà Cung Cấp",
+            BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Nhân Viên",
             TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(10, 10, 10, 10); gbc.weightx = 1.0;
 
         int y = 0;
-        form.add(createLabel("Mã NCC:"), gbc); gbc.gridy = ++y;
-        txtMaNCC = LuxuryTheme.createTextField(); txtMaNCC.setEditable(false); txtMaNCC.setBackground(new Color(240, 240, 240));
-        form.add(txtMaNCC, gbc);
+        form.add(createLabel("Mã NV:"), gbc); gbc.gridy = ++y;
+        txtMaNV = LuxuryTheme.createTextField(); txtMaNV.setEditable(false); txtMaNV.setBackground(new Color(240, 240, 240));
+        form.add(txtMaNV, gbc);
 
-        gbc.gridy = ++y; form.add(createLabel("Tên Công Ty:"), gbc); gbc.gridy = ++y;
-        txtTenCongTy = LuxuryTheme.createTextField(); form.add(txtTenCongTy, gbc);
+        gbc.gridy = ++y; form.add(createLabel("Họ Tên:"), gbc); gbc.gridy = ++y;
+        txtTenNV = LuxuryTheme.createTextField(); form.add(txtTenNV, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Số Điện Thoại:"), gbc); gbc.gridy = ++y;
         txtSDT = LuxuryTheme.createTextField(); form.add(txtSDT, gbc);
 
-        gbc.gridy = ++y; form.add(createLabel("Địa Chỉ:"), gbc); gbc.gridy = ++y;
-        txtDiaChi = LuxuryTheme.createTextField(); form.add(txtDiaChi, gbc);
+        gbc.gridy = ++y; form.add(createLabel("Giới Tính:"), gbc); gbc.gridy = ++y;
+        cbGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ"}); 
+        cbGioiTinh.setBackground(Color.WHITE);
+        cbGioiTinh.setFont(new Font("Arial", Font.PLAIN, 15));
+        form.add(cbGioiTinh, gbc);
 
-        gbc.gridy = ++y; form.add(createLabel("Email:"), gbc); gbc.gridy = ++y;
-        txtEmail = LuxuryTheme.createTextField(); form.add(txtEmail, gbc);
+        gbc.gridy = ++y; form.add(createLabel("Chức Vụ:"), gbc); gbc.gridy = ++y;
+        cbChucVu = new JComboBox<>(new String[]{"Lễ tân", "Quản lý", "Phục vụ"}); 
+        cbChucVu.setBackground(Color.WHITE);
+        cbChucVu.setFont(new Font("Arial", Font.PLAIN, 15));
+        form.add(cbChucVu, gbc);
 
-        gbc.gridy = ++y; form.add(createLabel("Người Liên Hệ:"), gbc); gbc.gridy = ++y;
-        txtNguoiLienHe = LuxuryTheme.createTextField(); form.add(txtNguoiLienHe, gbc);
+        gbc.gridy = ++y; form.add(createLabel("Ngày Sinh:"), gbc); gbc.gridy = ++y;
+        dateChooser = new JDateChooser(); 
+        dateChooser.setDateFormatString("dd/MM/yyyy");
+        dateChooser.setFont(new Font("Arial", Font.PLAIN, 15));
+        form.add(dateChooser, gbc);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         btnPanel.setOpaque(false);
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
-        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         btnAdd.addActionListener(e -> {
             try {
-                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
-                dao.themNhaCungCap(ncc);
+                NhanVien nv = taoNhanVienTuForm();
+                dao.themNhanVien(nv);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Thêm thành công!");
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); }
@@ -82,27 +96,38 @@ public class NhaCungCapPanel extends JPanel {
 
         btnEdit.addActionListener(e -> {
             try {
-                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
-                dao.capNhatNhaCungCap(ncc);
+                NhanVien nv = taoNhanVienTuForm();
+                dao.capNhatNhanVien(nv);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); }
         });
 
         btnDelete.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row < 0) return;
             if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Xóa", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                dao.xoaNhaCungCap(txtMaNCC.getText());
-                refreshForm();
+                dao.xoaNhanVien(txtMaNV.getText()); refreshForm();
             }
         });
 
-        btnClear.addActionListener(e -> refreshForm());
-
-        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
+        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete);
         gbc.gridy = ++y; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
         return form;
+    }
+
+    private NhanVien taoNhanVienTuForm() {
+        NhanVien nv = new NhanVien();
+        nv.setMaNV(txtMaNV.getText());
+        nv.setTenNV(txtTenNV.getText());
+        nv.setSoDienThoai(txtSDT.getText());
+        nv.setGioiTinh(cbGioiTinh.getSelectedItem().toString());
+        nv.setChucVu(cbChucVu.getSelectedItem().toString());
+        
+        java.util.Date utilDate = dateChooser.getDate();
+        if(utilDate != null) {
+            LocalDate ld = utilDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            nv.setNgaySinh(ld);
+        }
+        return nv;
     }
 
     private JPanel createTableAndSearchPanel() {
@@ -112,16 +137,14 @@ public class NhaCungCapPanel extends JPanel {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setOpaque(false);
         searchPanel.add(createLabel("Tìm kiếm (Mã/Tên): "));
-        txtSearch = LuxuryTheme.createTextField();
-        txtSearch.setPreferredSize(new Dimension(250, 35));
+        txtSearch = LuxuryTheme.createTextField(); txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        
         btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new String[]{"Mã NCC", "Tên Công Ty", "SĐT", "Địa Chỉ", "Email", "Người Liên Hệ"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Mã NV", "Họ Tên", "SĐT", "Giới Tính", "Chức Vụ", "Ngày Sinh"}, 0);
         table = new JTable(tableModel);
         table.setRowHeight(40); // ĐỒNG BỘ 40px
         table.getTableHeader().setBackground(LuxuryTheme.NAVY);
@@ -131,12 +154,19 @@ public class NhaCungCapPanel extends JPanel {
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int r = table.getSelectedRow();
-                txtMaNCC.setText(table.getValueAt(r, 0).toString());
-                txtTenCongTy.setText(table.getValueAt(r, 1).toString());
+                txtMaNV.setText(table.getValueAt(r, 0).toString());
+                txtTenNV.setText(table.getValueAt(r, 1).toString());
                 txtSDT.setText(table.getValueAt(r, 2).toString());
-                txtDiaChi.setText(table.getValueAt(r, 3).toString());
-                txtEmail.setText(table.getValueAt(r, 4).toString());
-                txtNguoiLienHe.setText(table.getValueAt(r, 5).toString());
+                cbGioiTinh.setSelectedItem(table.getValueAt(r, 3).toString());
+                cbChucVu.setSelectedItem(table.getValueAt(r, 4).toString());
+                
+                String dateStr = table.getValueAt(r, 5).toString();
+                if(!dateStr.isEmpty()) {
+                    LocalDate ld = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    dateChooser.setDate(java.sql.Date.valueOf(ld));
+                } else {
+                    dateChooser.setDate(null);
+                }
             }
         });
 
@@ -154,15 +184,18 @@ public class NhaCungCapPanel extends JPanel {
     }
 
     private void refreshForm() {
-        txtMaNCC.setText(dao.sinhMaMoi());
-        txtTenCongTy.setText(""); txtSDT.setText(""); txtDiaChi.setText(""); txtEmail.setText(""); txtNguoiLienHe.setText("");
-        loadData(dao.getAllNhaCungCap());
+        txtMaNV.setText(dao.sinhMaMoi());
+        txtTenNV.setText(""); txtSDT.setText(""); dateChooser.setDate(null);
+        cbGioiTinh.setSelectedIndex(0); cbChucVu.setSelectedIndex(0);
+        loadData(dao.layTatCaNhanVien());
     }
 
-    private void loadData(List<NhaCungCap> list) {
+    private void loadData(List<NhanVien> list) {
         tableModel.setRowCount(0);
-        for (NhaCungCap n : list) {
-            tableModel.addRow(new Object[]{n.getMaNCC(), n.getTenCongTy(), n.getSdt(), n.getDiaChi(), n.getEmail(), n.getNguoiLienHe()});
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        for (NhanVien nv : list) {
+            String ngaySinh = nv.getNgaySinh() != null ? nv.getNgaySinh().format(fmt) : "";
+            tableModel.addRow(new Object[]{nv.getMaNV(), nv.getTenNV(), nv.getSoDienThoai(), nv.getGioiTinh(), nv.getChucVu(), ngaySinh});
         }
     }
 }

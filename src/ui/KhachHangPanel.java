@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.*;
+import java.time.LocalDate;
 import java.util.List;
 
 public class KhachHangPanel extends JPanel {
@@ -33,28 +35,32 @@ public class KhachHangPanel extends JPanel {
         lblHeader.setForeground(LuxuryTheme.NAVY);
         add(lblHeader, BorderLayout.NORTH);
 
-        // 2. KHU VỰC FORM (Ô Input xịn & Nút bấm)
+        // 2. KHU VỰC FORM
         add(createFormPanel(), BorderLayout.WEST);
 
         // 3. KHU VỰC TABLE & PHÂN TRANG
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // Tải dữ liệu ban đầu
-        loadDataToTable();
+        // Tải dữ liệu ban đầu và sinh mã mới
+        refreshForm();
     }
 
     private JPanel createFormPanel() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
-        form.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin chi tiết"));
+        form.setPreferredSize(new Dimension(350, 0)); // Chốt cứng chiều ngang form cho cân đối
+        form.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin chi tiết", 
+            javax.swing.border.TitledBorder.LEFT, javax.swing.border.TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(15, 10, 15, 10);
         gbc.weightx = 1.0;
 
-        // Mã KH
+        // Mã KH (Khóa cứng để không cho sửa, tự động sinh mã)
         gbc.gridy = 0; form.add(createLabel("Mã Khách Hàng:"), gbc);
         txtMaKH = LuxuryTheme.createTextField();
+        txtMaKH.setEditable(false); 
+        txtMaKH.setBackground(new Color(240, 240, 240));
         gbc.gridy = 1; form.add(txtMaKH, gbc);
 
         // Tên KH
@@ -71,14 +77,39 @@ public class KhachHangPanel extends JPanel {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         btnPanel.setBackground(LuxuryTheme.CREAM);
         
-        // Màu TEAL cho nút chính (Thêm), NAVY cho nút phụ
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
-        JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
+
+        // Sự kiện Thêm
+        btnAdd.addActionListener(e -> {
+            try {
+                String ten = txtTenKH.getText().trim();
+                if (ten.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Tên khách hàng không được để trống!");
+                    return;
+                }
+                
+                KhachHang kh = new KhachHang();
+                kh.setMaKH(txtMaKH.getText()); // Lấy mã đã sinh tự động trên form
+                kh.setTenKH(ten);
+                kh.setSdt(txtSdt.getText().trim());
+                kh.setNgayDangKy(LocalDate.now());
+                
+                dao.themKhachHang(kh);
+                refreshForm(); // Làm mới lại form và sinh mã KH tiếp theo
+                JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            }
+        });
+
+        // Sự kiện Làm Mới form (Bỏ chọn bảng, sinh mã mới)
+        btnClear.addActionListener(e -> refreshForm());
 
         btnPanel.add(btnAdd);
         btnPanel.add(btnEdit);
-        btnPanel.add(btnDelete);
+        btnPanel.add(btnClear);
 
         gbc.gridy = 6;
         gbc.insets = new Insets(30, 10, 10, 10);
@@ -91,23 +122,31 @@ public class KhachHangPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(LuxuryTheme.CREAM);
 
-        // Table Model
         String[] cols = {"Mã KH", "Họ Tên", "SĐT", "Điểm", "Ngày ĐK"};
         tableModel = new DefaultTableModel(cols, 0);
         table = new JTable(tableModel);
         
-        // Custom Table Header (Màu Navy, chữ Vàng)
         table.getTableHeader().setBackground(LuxuryTheme.NAVY);
         table.getTableHeader().setForeground(LuxuryTheme.GOLD);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-        table.setRowHeight(35);
-        table.setSelectionBackground(new Color(17, 126, 141, 50)); // Teal nhạt khi select
+        table.setRowHeight(40); // ĐỒNG BỘ 40px
+        table.setSelectionBackground(new Color(17, 126, 141, 50)); 
+
+        // Sự kiện click vào dòng trong bảng
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int r = table.getSelectedRow();
+                txtMaKH.setText(table.getValueAt(r, 0).toString());
+                txtTenKH.setText(table.getValueAt(r, 1).toString());
+                txtSdt.setText(table.getValueAt(r, 2).toString());
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
 
-        // --- THANH PHÂN TRANG TỰ ĐỘNG BÊN DƯỚI ---
+        // --- THANH PHÂN TRANG ---
         JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         paginationPanel.setBackground(LuxuryTheme.CREAM);
 
@@ -138,16 +177,23 @@ public class KhachHangPanel extends JPanel {
         return lbl;
     }
 
+    // --- HÀM LÀM MỚI FORM VÀ SINH MÃ ---
+    private void refreshForm() {
+        txtMaKH.setText(dao.sinhMaMoi()); // Gọi lệnh tự sinh KH01, KH02...
+        txtTenKH.setText("");
+        txtSdt.setText("");
+        loadDataToTable(); // Cập nhật lại bảng
+    }
+
     // --- LOGIC DATA & PHÂN TRANG ---
     private void loadDataToTable() {
-        // Lấy tất cả dữ liệu từ Database 1 lần
         allKhachHang = dao.getAllKhachHang();
-        currentPage = 1; // Reset về trang 1
+        currentPage = 1; 
         updateTableDisplay();
     }
 
     private void updateTableDisplay() {
-        tableModel.setRowCount(0); // Xóa bảng hiện tại
+        tableModel.setRowCount(0); 
         if (allKhachHang == null || allKhachHang.isEmpty()) {
             lblPageInfo.setText("Trang 1 / 1");
             return;
@@ -156,7 +202,6 @@ public class KhachHangPanel extends JPanel {
         int maxPage = (int) Math.ceil((double) allKhachHang.size() / ITEMS_PER_PAGE);
         lblPageInfo.setText("Trang " + currentPage + " / " + maxPage);
 
-        // Cắt sub-list để hiển thị cho trang hiện tại
         int start = (currentPage - 1) * ITEMS_PER_PAGE;
         int end = Math.min(start + ITEMS_PER_PAGE, allKhachHang.size());
 

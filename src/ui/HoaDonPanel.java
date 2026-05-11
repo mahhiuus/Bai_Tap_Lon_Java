@@ -45,13 +45,12 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        // Cấu trúc cột dựa theo model HoaDonBan
         tableModel = new DefaultTableModel(new String[]{
             "Mã HĐ", "Mã Phiên", "Mã KH", "Mã NV", "Ngày Bán", "Tiền Bida", "Tiền SP", "Tổng Tiền"
         }, 0);
         
         table = new JTable(tableModel);
-        table.setRowHeight(40); // Padding cho dòng
+        table.setRowHeight(40); // ĐỒNG BỘ 40px
         table.getTableHeader().setBackground(LuxuryTheme.NAVY);
         table.getTableHeader().setForeground(LuxuryTheme.GOLD);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
@@ -70,12 +69,10 @@ public class HoaDonPanel extends JPanel {
         panel.setOpaque(false);
         panel.setBorder(new EmptyBorder(10, 0, 0, 0));
 
-        // Nút Xóa
         JButton btnDelete = LuxuryTheme.createButton("Xóa Hóa Đơn", new Color(192, 57, 43), Color.WHITE);
         btnDelete.addActionListener(e -> xoaHoaDon());
         panel.add(btnDelete, BorderLayout.WEST);
 
-        // Hiển thị tổng doanh thu
         lblTongDoanhThu = new JLabel("Tổng doanh thu: 0 VNĐ");
         lblTongDoanhThu.setFont(new Font("Arial", Font.BOLD, 20));
         lblTongDoanhThu.setForeground(Color.RED);
@@ -89,7 +86,7 @@ public class HoaDonPanel extends JPanel {
         double tongDoanhThu = 0;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        List<HoaDonBan> list = dao.getAllHoaDonBan(); // Gọi DAO
+        List<HoaDonBan> list = dao.getAllHoaDonBan(); 
         for (HoaDonBan hdb : list) {
             String ngayBanStr = hdb.getNgayBan() != null ? hdb.getNgayBan().format(formatter) : "";
             
@@ -123,8 +120,8 @@ public class HoaDonPanel extends JPanel {
             
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                dao.xoaHoaDonBan(maHDB); // Gọi DAO để xóa
-                loadData(); // Tải lại bảng
+                dao.xoaHoaDonBan(maHDB); 
+                loadData(); 
                 JOptionPane.showMessageDialog(this, "Xóa thành công!");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi xóa: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
