@@ -57,8 +57,8 @@ public class MainDashboardUI extends JFrame {
         navBar.add(lblSubLogo);
 
         String[] menuItems = {
-            "Tổng quan", "Sơ đồ Bàn", "Quản Lý Bàn Bida", "Sản phẩm", "Khách hàng", "Nhà cung cấp", 
-            "Nhân viên", "Hóa đơn", "Tài khoản", "Đăng xuất"
+            "Tổng quan", "Sơ đồ Bàn", "Menu Đồ Ăn","Quản Lý Bàn Bida", "Sản phẩm", "Khách hàng", "Nhà cung cấp", 
+            "Nhân viên", "Hóa đơn bán","Hóa đơn nhập", "Tài khoản", "Đăng xuất"
         };
         
         for (String item : menuItems) {
@@ -101,9 +101,11 @@ public class MainDashboardUI extends JFrame {
                     case "Tổng quan": centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER); break;
                     case "Khách hàng": centerContentPanel.add(new KhachHangPanel(), BorderLayout.CENTER); break;
                     case "Nhà cung cấp": centerContentPanel.add(new NhaCungCapPanel(), BorderLayout.CENTER); break;
+                    case "Menu Đồ Ăn": centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER); break;
                     case "Quản Lý Bàn Bida": centerContentPanel.add(new BanBidaPanel(), BorderLayout.CENTER); break;
                     case "Sơ đồ Bàn": centerContentPanel.add(new SoDoBanPanel(), BorderLayout.CENTER); break;
-                    case "Hóa đơn": centerContentPanel.add(new HoaDonPanel(), BorderLayout.CENTER); break;
+                    case "Hóa đơn bán": centerContentPanel.add(new HoaDonBanPanel(), BorderLayout.CENTER); break;
+                    case "Hóa đơn nhập": centerContentPanel.add(new HoaDonNhapPanel(), BorderLayout.CENTER); break;
                     case "Sản phẩm": centerContentPanel.add(new SanPhamPanel(), BorderLayout.CENTER); break;
                     case "Nhân viên": centerContentPanel.add(new NhanVienPanel(), BorderLayout.CENTER); break;
                     // Các case khác bạn nhét Panel vào đây
