@@ -214,8 +214,6 @@ public class TaiKhoanDAO {
         return null;
     }
 
-    // --- PHƯƠNG THỨC THÊM MỚI ---
-
     // Phương thức kiểm tra tên đăng nhập đã tồn tại chưa (Dùng cho RegisterUI)
     public boolean kiemTraTenDangNhapTonTai(String tenDangNhap) {
         String sql = "SELECT COUNT(*) FROM tai_khoan WHERE ten_dang_nhap = ?";
@@ -249,7 +247,39 @@ public class TaiKhoanDAO {
         }
         return false;
     }
-}
+    
+    // =========================================================================
+    // CÁC PHƯƠNG THỨC BỔ SUNG CHO GIAO DIỆN QUẢN LÝ TÀI KHOẢN (TaiKhoanPanel)
+    // =========================================================================
+    
+    // Phương thức cập nhật toàn bộ thông tin tài khoản (Dành cho chức năng Sửa trên UI)
+    public void capNhatToanBoTaiKhoan(TaiKhoan tk) {
+        String sql = "UPDATE tai_khoan SET ten_dang_nhap = ?, mat_khau = ?, vai_tro = ?, ma_nv = ? WHERE ma_tk = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tk.getTenDangNhap());
+            stmt.setString(2, tk.getMatKhau());
+            stmt.setString(3, tk.getVaiTro());
+            stmt.setString(4, tk.getMaNV());
+            stmt.setString(5, tk.getMaTK());
+            stmt.executeUpdate();
+            System.out.println("Cập nhật toàn bộ tài khoản thành công!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi cập nhật toàn bộ tài khoản: " + e.getMessage(), e);
+        }
+    }
+
+    // Alias cho phương thức xóa tài khoản (Gọi lại hàm cũ của bạn để đồng bộ)
+    public void xoaTaiKhoan(String maTK) {
+        xoaTaiKhoanTheoMaTK(maTK);
+    }
+
+    // Alias cho phương thức lấy tất cả (Gọi lại hàm cũ của bạn để đồng bộ)
+    public List<TaiKhoan> getAllTaiKhoan() {
+        return layTatCaTaiKhoan();
+    }
+
     // public static void main(String[] args) {
     //     TaiKhoanDAO dao = new TaiKhoanDAO();
     // //     TaiKhoan tk = new TaiKhoan();
@@ -265,4 +295,4 @@ public class TaiKhoanDAO {
     // //     // dao.doiMatKhau("TK002", "manhhieu27");
         
     // }
-
+}

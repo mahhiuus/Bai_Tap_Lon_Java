@@ -1,9 +1,9 @@
 package ui;
 
+import model.TaiKhoan;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,9 +11,13 @@ public class MainDashboardUI extends JFrame {
 
     private JPanel centerContentPanel;
     private List<JButton> menuButtons; 
+    private TaiKhoan currentUser; // Biến lưu tài khoản đang đăng nhập
 
-    public MainDashboardUI() {
-        setTitle("Billiard Management System - Luxury Edition");
+    // --- CẬP NHẬT: Nhận Tài khoản từ form Login truyền sang ---
+    public MainDashboardUI(TaiKhoan tk) {
+        this.currentUser = tk;
+        
+        setTitle("Billiard Management System - Xin chào: " + currentUser.getTenDangNhap() + " (" + currentUser.getVaiTro() + ")");
         setSize(1400, 850);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -21,15 +25,12 @@ public class MainDashboardUI extends JFrame {
 
         menuButtons = new ArrayList<>();
 
-        // 1. THANH NAV BAR BÊN TRÁI
         add(createNavBar(), BorderLayout.WEST);
 
-        // 2. KHU VỰC CHÍNH
         centerContentPanel = new JPanel(new BorderLayout());
         centerContentPanel.setBackground(LuxuryTheme.CREAM);
         
-        // Mặc định mở Tổng quan
-        centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER);
+        centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER);
         
         add(centerContentPanel, BorderLayout.CENTER);
     }
@@ -40,7 +41,6 @@ public class MainDashboardUI extends JFrame {
         navBar.setBackground(LuxuryTheme.NAVY);
         navBar.setPreferredSize(new Dimension(260, getHeight()));
 
-        // LOGO
         JLabel lblLogo = new JLabel("BILLIARDS", SwingConstants.CENTER);
         lblLogo.setFont(new Font("Arial", Font.BOLD, 28));
         lblLogo.setForeground(LuxuryTheme.GOLD); 
@@ -56,10 +56,19 @@ public class MainDashboardUI extends JFrame {
         navBar.add(lblLogo);
         navBar.add(lblSubLogo);
 
-        String[] menuItems = {
-            "Tổng quan", "Sơ đồ Bàn", "Menu Đồ Ăn","Quản Lý Bàn Bida", "Sản phẩm", "Khách hàng", "Nhà cung cấp", 
-            "Nhân viên", "Hóa đơn bán","Hóa đơn nhập", "Tài khoản", "Đăng xuất"
-        };
+        // --- CẬP NHẬT: CHIA ROLE ---
+        String[] menuItems;
+        if (currentUser.getVaiTro().equals("ADMIN")) {
+            menuItems = new String[]{
+                "Bán Hàng", "Sơ đồ Bàn", "Tổng quan", "Quản Lý Bàn Bida", "Sản phẩm", 
+                "Khách hàng", "Nhà cung cấp", "Nhân viên", "Hóa đơn Bán", "Hóa đơn Nhập", "Quản lý tài khoản", "Đăng xuất"
+            };
+        } else {
+            // Role NHANVIEN chỉ thấy bấy nhiêu đây
+            menuItems = new String[]{
+                "Bán Hàng", "Sơ đồ Bàn", "Tổng quan", "Hóa đơn Bán", "Hóa đơn Nhập", "Đăng xuất"
+            };
+        }
         
         for (String item : menuItems) {
             JButton btnMenu = new JButton(item);
@@ -69,16 +78,12 @@ public class MainDashboardUI extends JFrame {
             btnMenu.setFocusPainted(false);
             btnMenu.setBorderPainted(false);
             btnMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
-            
-            // --- TĂNG CHIỀU CAO MENU TỪ 50 LÊN 65 ---
             btnMenu.setMaximumSize(new Dimension(260, 65));
             btnMenu.setHorizontalAlignment(SwingConstants.LEFT);
             btnMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            
-            // --- TĂNG PADDING CHO NÚT (TRÊN 15, DƯỚI 15) ---
             btnMenu.setBorder(new EmptyBorder(15, 45, 15, 0));
 
-            if (item.equals("Tổng quan")) {
+            if (item.equals("Bán Hàng")) {
                 setActiveTab(btnMenu);
             }
 
@@ -86,9 +91,9 @@ public class MainDashboardUI extends JFrame {
 
             btnMenu.addActionListener(e -> {
                 if (item.equals("Đăng xuất")) {
-                    if (JOptionPane.showConfirmDialog(this, "Đăng xuất?", "Xác nhận", 0) == 0) {
+                    if (JOptionPane.showConfirmDialog(this, "Đăng xuất khỏi hệ thống?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                         new LoginUI().setVisible(true);
-                        dispose();
+                        dispose(); 
                     }
                     return;
                 }
@@ -98,17 +103,22 @@ public class MainDashboardUI extends JFrame {
 
                 centerContentPanel.removeAll();
                 switch (item) {
-                    case "Tổng quan": centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER); break;
+                    case "Bán Hàng": centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER); break;
+                    case "Tổng quan": centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER); break; 
+                    case "Sơ đồ Bàn": centerContentPanel.add(new SoDoBanPanel(), BorderLayout.CENTER); break;
+                    
+                    // --- CẬP NHẬT: Truyền Tài khoản vào để check quyền Xóa bên trong ---
+                    case "Hóa đơn Bán": centerContentPanel.add(new HoaDonBanPanel(currentUser), BorderLayout.CENTER); break;
+                    case "Hóa đơn Nhập": centerContentPanel.add(new HoaDonNhapPanel(currentUser), BorderLayout.CENTER); break;
+                    
+                    // Các form của ADMIN
                     case "Khách hàng": centerContentPanel.add(new KhachHangPanel(), BorderLayout.CENTER); break;
                     case "Nhà cung cấp": centerContentPanel.add(new NhaCungCapPanel(), BorderLayout.CENTER); break;
-                    case "Menu Đồ Ăn": centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER); break;
                     case "Quản Lý Bàn Bida": centerContentPanel.add(new BanBidaPanel(), BorderLayout.CENTER); break;
-                    case "Sơ đồ Bàn": centerContentPanel.add(new SoDoBanPanel(), BorderLayout.CENTER); break;
-                    case "Hóa đơn bán": centerContentPanel.add(new HoaDonBanPanel(), BorderLayout.CENTER); break;
-                    case "Hóa đơn nhập": centerContentPanel.add(new HoaDonNhapPanel(), BorderLayout.CENTER); break;
                     case "Sản phẩm": centerContentPanel.add(new SanPhamPanel(), BorderLayout.CENTER); break;
                     case "Nhân viên": centerContentPanel.add(new NhanVienPanel(), BorderLayout.CENTER); break;
-                    // Các case khác bạn nhét Panel vào đây
+                    case "Quản Lý Tài khoản": centerContentPanel.add(new TaiKhoanPanel(), BorderLayout.CENTER); break;
+                    
                     default: centerContentPanel.add(new JPanel(), BorderLayout.CENTER); break;
                 }
                 centerContentPanel.revalidate();
@@ -126,7 +136,6 @@ public class MainDashboardUI extends JFrame {
     private void setActiveTab(JButton btn) {
         btn.setForeground(LuxuryTheme.GOLD);
         btn.setBackground(new Color(20, 40, 80));
-        // --- GIỮ PADDING KHI ACTIVE ---
         btn.setBorder(new CompoundBorder(
                 new MatteBorder(0, 6, 0, 0, LuxuryTheme.GOLD), 
                 new EmptyBorder(15, 39, 15, 0)
@@ -140,9 +149,7 @@ public class MainDashboardUI extends JFrame {
             btn.setBorder(new EmptyBorder(15, 45, 15, 0));
         }
     }
-
-    public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
-        SwingUtilities.invokeLater(() -> new MainDashboardUI().setVisible(true));
-    }
+  
+        // Còn nếu muốn chạy thật với LoginUI thì dùng dòng này:
+        // new LoginUI().setVisible(true);
 }

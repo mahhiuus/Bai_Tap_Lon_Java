@@ -3,6 +3,7 @@ package ui;
 import dao.HoaDonBanDAO;
 import dao.DBConnection;
 import model.HoaDonBan;
+import model.TaiKhoan; // Đã thêm thư viện TaiKhoan
 
 // Thư viện in PDF của iText 5
 import com.itextpdf.text.*;
@@ -27,8 +28,11 @@ public class HoaDonBanPanel extends JPanel {
     private JTable table;
     private HoaDonBanDAO dao;
     private JLabel lblTongDoanhThu;
+    private TaiKhoan currentUser; // Thêm biến lưu quyền tài khoản
 
-    public HoaDonBanPanel() {
+    // --- CẬP NHẬT CONSTRUCTOR NHẬN TÀI KHOẢN ---
+    public HoaDonBanPanel(TaiKhoan user) {
+        this.currentUser = user;
         dao = new HoaDonBanDAO();
         setLayout(new BorderLayout(20, 20));
         setBackground(LuxuryTheme.CREAM); 
@@ -86,6 +90,11 @@ public class HoaDonBanPanel extends JPanel {
         btnPanel.setOpaque(false);
 
         JButton btnDelete = LuxuryTheme.createButton("Xóa Hóa Đơn", new Color(192, 57, 43), Color.WHITE);
+        
+        // --- LOGIC PHÂN QUYỀN ẨN NÚT XÓA ---
+        if (currentUser != null && !currentUser.getVaiTro().equals("ADMIN")) {
+            btnDelete.setVisible(false); // Nếu là nhân viên thì ẩn nút Xóa đi
+        }
         btnDelete.addActionListener(e -> xoaHoaDon());
 
         JButton btnInPDF = LuxuryTheme.createButton("IN LẠI HÓA ĐƠN PDF", LuxuryTheme.GOLD, LuxuryTheme.NAVY);

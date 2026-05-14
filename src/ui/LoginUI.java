@@ -86,21 +86,10 @@ public class LoginUI extends JFrame {
         btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         btnLogin.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                btnLogin.setBackground(hoverColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                btnLogin.setBackground(mainColor);
-            }
-
-            public void mousePressed(MouseEvent e) {
-                btnLogin.setBackground(clickColor);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                btnLogin.setBackground(hoverColor);
-            }
+            public void mouseEntered(MouseEvent e) { btnLogin.setBackground(hoverColor); }
+            public void mouseExited(MouseEvent e) { btnLogin.setBackground(mainColor); }
+            public void mousePressed(MouseEvent e) { btnLogin.setBackground(clickColor); }
+            public void mouseReleased(MouseEvent e) { btnLogin.setBackground(hoverColor); }
         });
 
         btnLogin.addActionListener(new ActionListener() {
@@ -120,7 +109,8 @@ public class LoginUI extends JFrame {
                     SessionManager.DangNhap(tk);
                     JOptionPane.showMessageDialog(LoginUI.this, "Đăng nhập thành công! Chào mừng " + tk.getTenDangNhap(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
                     dispose();
-                    new MainDashboardUI().setVisible(true);
+                    // ĐÃ SỬA DÒNG NÀY: Truyền tài khoản tk vào Dashboard
+                    new MainDashboardUI(tk).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(LoginUI.this, "Tên đăng nhập hoặc mật khẩu không đúng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
@@ -132,29 +122,7 @@ public class LoginUI extends JFrame {
         lblForgot.setForeground(normalLinkColor);
         lblForgot.setCursor(new Cursor(Cursor.HAND_CURSOR));
         lblForgot.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lblForgot.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                lblForgot.setForeground(mainColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                lblForgot.setForeground(normalLinkColor);
-            }
-
-            public void mousePressed(MouseEvent e) {
-                lblForgot.setForeground(clickColor);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                lblForgot.setForeground(mainColor);
-            }
-            
-            public void mouseClicked(MouseEvent e) {
-               new ForgotPasswordUI().setVisible(true);
-               dispose();
-            }
-        });
-
+        
         JLabel lblRegister = new JLabel("Don't have an account? Register here.");
         lblRegister.setFont(new Font("Arial", Font.PLAIN, 13));
         lblRegister.setForeground(normalLinkColor);
@@ -162,51 +130,25 @@ public class LoginUI extends JFrame {
         lblRegister.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblRegister.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                lblRegister.setForeground(mainColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                lblRegister.setForeground(normalLinkColor);
-            }
-
-            public void mousePressed(MouseEvent e) {
-                lblRegister.setForeground(clickColor);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                lblRegister.setForeground(mainColor);
-            }
-            
+            public void mouseEntered(MouseEvent e) { lblRegister.setForeground(mainColor); }
+            public void mouseExited(MouseEvent e) { lblRegister.setForeground(normalLinkColor); }
+            public void mousePressed(MouseEvent e) { lblRegister.setForeground(clickColor); }
+            public void mouseReleased(MouseEvent e) { lblRegister.setForeground(mainColor); }
             public void mouseClicked(MouseEvent e) {
                new RegisterUI().setVisible(true);
-               dispose(); // Đổi thành dispose() cho đồng bộ và giải phóng bộ nhớ
+               dispose(); 
             }
         });
 
         lblForgot.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                lblForgot.setForeground(mainColor);
-            }
-
-            public void mouseExited(MouseEvent e) {
-                lblForgot.setForeground(normalLinkColor);
-            }
-
-            public void mousePressed(MouseEvent e) {
-                lblForgot.setForeground(clickColor);
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                lblForgot.setForeground(mainColor);
-            }
-            
-            // --- ĐÂY LÀ ĐOẠN CODE ĐÃ ĐƯỢC THÊM VÀO ---
+            public void mouseEntered(MouseEvent e) { lblForgot.setForeground(mainColor); }
+            public void mouseExited(MouseEvent e) { lblForgot.setForeground(normalLinkColor); }
+            public void mousePressed(MouseEvent e) { lblForgot.setForeground(clickColor); }
+            public void mouseReleased(MouseEvent e) { lblForgot.setForeground(mainColor); }
             public void mouseClicked(MouseEvent e) {
                 new ForgotPasswordUI().setVisible(true);
-                dispose(); // Đóng màn hình Login
+                dispose(); 
             }
-            // ----------------------------------------
         });
 
         rightPanel.add(lblTitle);
@@ -257,28 +199,17 @@ class ImagePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (image == null) {
-            return;
-        }
-
+        if (image == null) return;
         int panelWidth = getWidth();
         int panelHeight = getHeight();
-
         int imageWidth = image.getWidth(this);
         int imageHeight = image.getHeight(this);
-
-        if (imageWidth <= 0 || imageHeight <= 0) {
-            return;
-        }
-
+        if (imageWidth <= 0 || imageHeight <= 0) return;
         double scale = Math.max((double) panelWidth / imageWidth, (double) panelHeight / imageHeight);
-
         int newWidth = (int) (imageWidth * scale);
         int newHeight = (int) (imageHeight * scale);
-
         int x = (panelWidth - newWidth) / 2;
         int y = (panelHeight - newHeight) / 2;
-
         g.drawImage(image, x, y, newWidth, newHeight, this);
     }
 }

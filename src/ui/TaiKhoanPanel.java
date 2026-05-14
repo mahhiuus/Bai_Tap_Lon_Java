@@ -1,0 +1,140 @@
+package ui;
+
+import dao.TaiKhoanDAO;
+import dao.NhanVienDAO;
+import model.TaiKhoan;
+import model.NhanVien;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+
+public class TaiKhoanPanel extends JPanel {
+    private JTextField txtMaTK, txtUsername, txtPassword;
+    private JComboBox<String> cbVaiTro, cbNhanVien;
+    private DefaultTableModel tableModel;
+    private JTable table;
+    private TaiKhoanDAO dao = new TaiKhoanDAO();
+
+    public TaiKhoanPanel() {
+        setLayout(new BorderLayout(20, 20));
+        setBackground(LuxuryTheme.CREAM);
+        setBorder(new EmptyBorder(30, 40, 30, 40));
+
+        JLabel lblHeader = new JLabel("Quản Lý Hệ Thống Tài Khoản");
+        lblHeader.setFont(new Font("Arial", Font.BOLD, 28));
+        lblHeader.setForeground(LuxuryTheme.NAVY);
+        add(lblHeader, BorderLayout.NORTH);
+
+        add(createFormPanel(), BorderLayout.WEST);
+        add(createTablePanel(), BorderLayout.CENTER);
+        refreshForm();
+    }
+
+    private JPanel createFormPanel() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(LuxuryTheme.CREAM);
+        form.setPreferredSize(new Dimension(380, 0));
+        form.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Tài khoản"));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(15, 10, 15, 10); gbc.weightx = 1.0;
+
+        int y = 0;
+        gbc.gridy = y++; form.add(createLabel("Mã Tài Khoản:"), gbc);
+        txtMaTK = LuxuryTheme.createTextField(); txtMaTK.setEditable(false); txtMaTK.setBackground(new Color(240, 240, 240));
+        gbc.gridy = y++; form.add(txtMaTK, gbc);
+
+        gbc.gridy = y++; form.add(createLabel("Tên đăng nhập:"), gbc);
+        txtUsername = LuxuryTheme.createTextField(); gbc.gridy = y++; form.add(txtUsername, gbc);
+
+        gbc.gridy = y++; form.add(createLabel("Mật khẩu:"), gbc);
+        txtPassword = LuxuryTheme.createTextField(); gbc.gridy = y++; form.add(txtPassword, gbc);
+
+        gbc.gridy = y++; form.add(createLabel("Vai trò:"), gbc);
+        cbVaiTro = new JComboBox<>(new String[]{"NHANVIEN", "ADMIN"}); 
+        cbVaiTro.setBackground(Color.WHITE); gbc.gridy = y++; form.add(cbVaiTro, gbc);
+
+        gbc.gridy = y++; form.add(createLabel("Sở hữu bởi (Nhân viên):"), gbc);
+        cbNhanVien = new JComboBox<>(); cbNhanVien.setBackground(Color.WHITE); 
+        gbc.gridy = y++; form.add(cbNhanVien, gbc);
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0)); btnPanel.setOpaque(false);
+        JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
+        JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
+        JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
+
+        btnAdd.addActionListener(e -> {
+            dao.themTaiKhoan(taoDataTuForm()); refreshForm();
+            JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
+        });
+
+        btnEdit.addActionListener(e -> {
+            dao.capNhatToanBoTaiKhoan(taoDataTuForm()); refreshForm();
+        });
+
+        btnDelete.addActionListener(e -> {
+            if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Xóa", 0) == 0) {
+                dao.xoaTaiKhoan(txtMaTK.getText()); refreshForm();
+            }
+        });
+
+        btnClear.addActionListener(e -> refreshForm());
+
+        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
+        gbc.gridy = y++; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
+        return form;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout()); panel.setOpaque(false);
+        tableModel = new DefaultTableModel(new String[]{"Mã TK", "Username", "Password", "Vai Trò", "Mã NV"}, 0);
+        table = new JTable(tableModel); table.setRowHeight(35);
+        table.getTableHeader().setBackground(LuxuryTheme.NAVY); table.getTableHeader().setForeground(LuxuryTheme.GOLD);
+        
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int r = table.getSelectedRow();
+                txtMaTK.setText(table.getValueAt(r, 0).toString());
+                txtUsername.setText(table.getValueAt(r, 1).toString());
+                txtPassword.setText(table.getValueAt(r, 2).toString());
+                cbVaiTro.setSelectedItem(table.getValueAt(r, 3).toString());
+                
+                String maNV = table.getValueAt(r, 4) != null ? table.getValueAt(r, 4).toString() : "";
+                for (int i = 0; i < cbNhanVien.getItemCount(); i++) {
+                    if (cbNhanVien.getItemAt(i).startsWith(maNV)) { cbNhanVien.setSelectedIndex(i); break; }
+                }
+            }
+        });
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private TaiKhoan taoDataTuForm() {
+        String maNV = null;
+        if(cbNhanVien.getSelectedItem() != null && !cbNhanVien.getSelectedItem().toString().contains("Trống")) {
+             maNV = cbNhanVien.getSelectedItem().toString().split(" - ")[0];
+        }
+        return new TaiKhoan(txtMaTK.getText(), txtUsername.getText(), txtPassword.getText(), 
+                            cbVaiTro.getSelectedItem().toString(), maNV);
+    }
+
+    private void refreshForm() {
+        txtMaTK.setText(dao.sinhMaMoi()); txtUsername.setText(""); txtPassword.setText("");
+        cbNhanVien.removeAllItems();
+        cbNhanVien.addItem("--- Trống (Không có NV) ---");
+        for(NhanVien nv : new NhanVienDAO().layTatCaNhanVien()) cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV());
+        
+        tableModel.setRowCount(0);
+        for (TaiKhoan tk : dao.getAllTaiKhoan()) {
+            tableModel.addRow(new Object[]{tk.getMaTK(), tk.getTenDangNhap(), tk.getMatKhau(), tk.getVaiTro(), tk.getMaNV()});
+        }
+    }
+
+    private JLabel createLabel(String txt) { JLabel l = new JLabel(txt); l.setFont(new Font("Arial", Font.BOLD, 14)); return l; }
+}

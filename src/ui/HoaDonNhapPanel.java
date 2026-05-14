@@ -6,6 +6,7 @@ import dao.NhanVienDAO;
 import model.HoaDonNhap;
 import model.NhaCungCap;
 import model.NhanVien;
+import model.TaiKhoan; // Import
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
@@ -25,8 +26,11 @@ public class HoaDonNhapPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private HoaDonNhapDAO dao;
+    private TaiKhoan currentUser; // Thêm biến User
 
-    public HoaDonNhapPanel() {
+    // CẬP NHẬT CONSTRUCTOR
+    public HoaDonNhapPanel(TaiKhoan user) {
+        this.currentUser = user;
         dao = new HoaDonNhapDAO();
         setLayout(new BorderLayout(20, 20));
         setBackground(LuxuryTheme.CREAM);
@@ -91,7 +95,12 @@ public class HoaDonNhapPanel extends JPanel {
         btnPanel.setOpaque(false);
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
+        
+        // --- LOGIC ẨN NÚT XÓA ---
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        if (currentUser != null && !currentUser.getVaiTro().equals("ADMIN")) {
+            btnDelete.setVisible(false); // Xóa bay màu nếu không phải Admin
+        }
 
         btnAdd.addActionListener(e -> {
             try {

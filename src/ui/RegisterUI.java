@@ -12,7 +12,7 @@ import model.TaiKhoan;
 public class RegisterUI extends JFrame {
 
     public RegisterUI() {
-        setTitle("Register - Billard Management System");
+        setTitle("Đăng Ký Tài Khoản - Hệ Thống Quản Lý Billiard");
         setSize(1000, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -38,15 +38,21 @@ public class RegisterUI extends JFrame {
         leftPanel.setBackground(Color.WHITE);
         leftPanel.setBorder(BorderFactory.createEmptyBorder(30, 25, 30, 25));
 
-        JLabel lblTitle = new JLabel("Create your account");
+        JLabel lblTitle = new JLabel("Tạo tài khoản mới");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitle.setForeground(mainColor);
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblSub = new JLabel("Register a new account for the system.");
+        JLabel lblSub = new JLabel("Đăng ký tài khoản mới cho hệ thống.");
         lblSub.setFont(new Font("Arial", Font.PLAIN, 14));
         lblSub.setForeground(Color.GRAY);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // --- ĐOẠN CODE CẤY THÊM HIỂN THỊ CHỨC VỤ ---
+        JLabel lblRole = new JLabel("Chức vụ cấp phép: NHÂN VIÊN (Mặc định)");
+        lblRole.setFont(new Font("Arial", Font.BOLD | Font.ITALIC, 14));
+        lblRole.setForeground(new Color(192, 57, 43));
+        lblRole.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblUser = new JLabel("Username");
         lblUser.setFont(new Font("Arial", Font.BOLD, 18));
@@ -134,7 +140,7 @@ public class RegisterUI extends JFrame {
                     // 4. Tạo đối tượng TaiKhoan mới
                     // Sinh mã tự động
                     String maTKMoi = dao.sinhMaMoi();
-                    // maNV để null tạm
+                    // maNV để null tạm. Vai trò mặc định là "NHANVIEN" như code cũ của bạn
                     TaiKhoan tkMoi = new TaiKhoan(maTKMoi, username, password, "NHANVIEN", null);
 
                     // 5. Thêm vào database
@@ -170,8 +176,13 @@ public class RegisterUI extends JFrame {
         leftPanel.add(lblTitle);
         leftPanel.add(Box.createVerticalStrut(10));
         leftPanel.add(lblSub);
-        leftPanel.add(Box.createVerticalStrut(25));
+        leftPanel.add(Box.createVerticalStrut(20)); // Thu hẹp một chút để nhét dòng role vào
         
+        // --- ADD DÒNG ROLE VÀO GIAO DIỆN ---
+        leftPanel.add(lblRole); 
+        leftPanel.add(Box.createVerticalStrut(10));
+        // -----------------------------------
+
         leftPanel.add(lblUser);
         leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(txtUser);
