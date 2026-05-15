@@ -9,7 +9,6 @@ import model.PhienChoi;
 
 public class HoaDonBanDAO {
     
-    // --- THUẬT TOÁN SINH MÃ MỚI THÔNG MINH, KHÔNG BAO GIỜ BỊ TRÙNG LẶP ---
     public String sinhMaMoi() {
         String sql = "SELECT ma_hdb FROM hoa_don_ban";
         int maxId = 0;
@@ -20,7 +19,6 @@ public class HoaDonBanDAO {
                 String ma = rs.getString("ma_hdb");
                 if (ma != null && ma.startsWith("HDB")) {
                     try {
-                        // Tách toàn bộ chữ, chỉ lấy phần số để so sánh toán học
                         int id = Integer.parseInt(ma.replaceAll("[^0-9]", ""));
                         if (id > maxId) {
                             maxId = id;
@@ -28,21 +26,15 @@ public class HoaDonBanDAO {
                     } catch (NumberFormatException ignored) {}
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        // Cộng 1 vào ID lớn nhất tìm được
+        } catch (SQLException e) { e.printStackTrace(); }
         return String.format("HDB%03d", maxId + 1);
     }
 
-    // Tạo hóa đơn bán từ phiên chơi với thông tin khách hàng, nhân viên và tiền bida
     public HoaDonBan taoTuPhien(String maPhien, String maKH, String maNV, double tienBida) {
         PhienChoi pc = new PhienChoiDAO().timTheoMaPhien(maPhien);
         if(pc == null) {return null;}
-        
         double tienSanPham = new ChiTietPhienDAO().tinhTongTienTheoPhien(maPhien);
         double tongTien = tienBida + tienSanPham;
-
         return new HoaDonBan(sinhMaMoi(), maPhien, maKH, maNV, LocalDate.now(), tienBida, tienSanPham, tongTien, "");
     }
 
@@ -60,34 +52,62 @@ public class HoaDonBanDAO {
             stmt.setDouble(8, hdb.getTongTien());
             stmt.setString(9, hdb.getGhiChu());
             stmt.executeUpdate();
-
             System.out.println("Thêm hoá đơn bán thành công! Mã: " + hdb.getMaHDB());
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khi thêm hóa đơn bán: " + e.getMessage(), e);
         }
     }
 
+    // --- HÀM BỔ SUNG ĐỂ SỬA LỖI DUPLICATE ---
+    public void capNhat(HoaDonBan hdb) {
+        String sql = "UPDATE hoa_don_ban SET tien_bida=?, tien_san_pham=?, tong_tien=?, ma_kh=?, ma_nv=? WHERE ma_hdb=?";
+        try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
+            ps.setDouble(1, hdb.getTienBida());
+            ps.setDouble(2, hdb.getTienSanPham());
+            ps.setDouble(3, hdb.getTongTien());
+            ps.setString(4, hdb.getMaKH());
+            ps.setString(5, hdb.getMaNV());
+            ps.setString(6, hdb.getMaHDB());
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public HoaDonBan layTheoMaPhien(String maPhien) {
+        String sql = "SELECT * FROM hoa_don_ban WHERE ma_phien=?";
+        try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
+            ps.setString(1, maPhien);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                HoaDonBan hdb = new HoaDonBan();
+                hdb.setMaHDB(rs.getString("ma_hdb"));
+                hdb.setMaPhien(rs.getString("ma_phien"));
+                hdb.setMaKH(rs.getString("ma_kh"));
+                hdb.setMaNV(rs.getString("ma_nv"));
+                Date d = rs.getDate("ngay_ban");
+                if (d != null) hdb.setNgayBan(d.toLocalDate());
+                hdb.setTienBida(rs.getDouble("tien_bida"));
+                hdb.setTienSanPham(rs.getDouble("tien_san_pham"));
+                hdb.setTongTien(rs.getDouble("tong_tien"));
+                hdb.setGhiChu(rs.getString("ghi_chu"));
+                return hdb;
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+    // ----------------------------------------
+
     public void xoaHoaDonBan(String maHDB) {
-        if (maHDB == null || maHDB.trim().isEmpty()) {
-            throw new IllegalArgumentException("Bạn chưa nhập mã hóa đơn bán cần xóa!");
-        }
         String sql = "DELETE FROM hoa_don_ban WHERE ma_hdb = ?";
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, maHDB);
-            
-            int ketQua = stmt.executeUpdate();
-            if (ketQua > 0) {System.out.println("Xóa hóa đơn bán thành công!");} 
-            else {System.out.println("Không tìm thấy mã hóa đơn để xóa.");}
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi xóa hóa đơn bán: " + e.getMessage(), e); 
-        }
+            stmt.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
     }
 
     public List<HoaDonBan> getAllHoaDonBan() {
         List<HoaDonBan> ds = new ArrayList<>();
         String sql = "SELECT * FROM hoa_don_ban ORDER BY ma_hdb DESC";
-
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -97,22 +117,15 @@ public class HoaDonBanDAO {
                 hdb.setMaPhien(rs.getString("ma_phien"));
                 hdb.setMaKH(rs.getString("ma_kh"));
                 hdb.setMaNV(rs.getString("ma_nv"));
-
                 Date d = rs.getDate("ngay_ban");
-                if(d != null) {
-                    hdb.setNgayBan(d.toLocalDate());
-                }
-                
+                if(d != null) hdb.setNgayBan(d.toLocalDate());
                 hdb.setTienBida(rs.getDouble("tien_bida"));
                 hdb.setTienSanPham(rs.getDouble("tien_san_pham"));
                 hdb.setTongTien(rs.getDouble("tong_tien"));
                 hdb.setGhiChu(rs.getString("ghi_chu"));
-            
                 ds.add(hdb);
             } 
-        } catch (SQLException e) { 
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
@@ -135,9 +148,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 return hdb;
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy hóa đơn bán theo mã: " + e.getMessage(), e); 
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return null;
     }
 
@@ -162,9 +173,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo ngày: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
@@ -188,9 +197,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) { 
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo khách hàng: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
@@ -214,9 +221,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo nhân viên: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
@@ -240,9 +245,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo top: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
@@ -267,19 +270,13 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo ngày: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 
     public List<HoaDonBan> layTopHoaDonTheoThang(int thang, int nam, int limit) {
         List<HoaDonBan> ds = new ArrayList<>();
-        String sql = """
-            SELECT * FROM hoa_don_ban
-            WHERE MONTH(ngay_ban) = ? AND YEAR(ngay_ban) = ?
-            ORDER BY tong_tien DESC LIMIT ?
-        """;
+        String sql = "SELECT * FROM hoa_don_ban WHERE MONTH(ngay_ban) = ? AND YEAR(ngay_ban) = ? ORDER BY tong_tien DESC LIMIT ?";
         try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
             ps.setInt(1, thang);
             ps.setInt(2, nam);
@@ -299,9 +296,7 @@ public class HoaDonBanDAO {
                 hdb.setGhiChu(rs.getString("ghi_chu"));
                 ds.add(hdb);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy danh sách hóa đơn bán theo tháng: " + e.getMessage(), e);
-        }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi: " + e.getMessage(), e); }
         return ds;
     }
 }

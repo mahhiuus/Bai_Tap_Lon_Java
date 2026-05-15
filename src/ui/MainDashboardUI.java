@@ -21,6 +21,10 @@ public class MainDashboardUI extends JFrame {
         setSize(1400, 850);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        
+        // --- TỰ ĐỘNG PHÓNG TO FULL MÀN HÌNH ---
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        
         setLayout(new BorderLayout());
 
         menuButtons = new ArrayList<>();
@@ -56,17 +60,18 @@ public class MainDashboardUI extends JFrame {
         navBar.add(lblLogo);
         navBar.add(lblSubLogo);
 
-        // --- CẬP NHẬT: CHIA ROLE ---
+        // --- CẬP NHẬT: CHIA ROLE & ĐỒNG BỘ TÊN NÚT BẤM VỚI LỆNH SWITCH ---
         String[] menuItems;
         if (currentUser.getVaiTro().equals("ADMIN")) {
             menuItems = new String[]{
-                "Bán Hàng", "Sơ đồ Bàn", "Tổng quan", "Quản Lý Bàn Bida", "Sản phẩm", 
-                "Khách hàng", "Nhà cung cấp", "Nhân viên", "Hóa đơn Bán", "Hóa đơn Nhập", "Quản lý tài khoản", "Đăng xuất"
+             "Tổng quan",  "Sơ đồ Bàn",  "Bán Hàng", 
+                "Quản Lý Bàn Bida", "Quản Lý Sản phẩm", "Quản Lý Khách hàng", 
+                "Quản Lý Nhà cung cấp", "Quản Lý Nhân viên", "Quản lý tài khoản", 
+                "Hóa đơn Bán", "Hóa đơn Nhập", "Đăng xuất"
             };
         } else {
-            // Role NHANVIEN chỉ thấy bấy nhiêu đây
             menuItems = new String[]{
-                "Bán Hàng", "Sơ đồ Bàn", "Tổng quan", "Hóa đơn Bán", "Hóa đơn Nhập", "Đăng xuất"
+                "Tổng quan", "Sơ đồ Bàn", "Bán Hàng", "Hóa đơn Bán", "Hóa đơn Nhập", "Đăng xuất"
             };
         }
         
@@ -102,25 +107,28 @@ public class MainDashboardUI extends JFrame {
                 setActiveTab(btnMenu);
 
                 centerContentPanel.removeAll();
+                
+                // --- ĐOẠN SWITCH CỦA BẠN ĐÃ ĐƯỢC CHÈN VÀO ĐÂY ---
                 switch (item) {
-                    case "Bán Hàng": centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER); break;
                     case "Tổng quan": centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER); break; 
                     case "Sơ đồ Bàn": centerContentPanel.add(new SoDoBanPanel(), BorderLayout.CENTER); break;
+                    case "Bán Hàng": centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER); break;
                     
                     // --- CẬP NHẬT: Truyền Tài khoản vào để check quyền Xóa bên trong ---
                     case "Hóa đơn Bán": centerContentPanel.add(new HoaDonBanPanel(currentUser), BorderLayout.CENTER); break;
                     case "Hóa đơn Nhập": centerContentPanel.add(new HoaDonNhapPanel(currentUser), BorderLayout.CENTER); break;
                     
                     // Các form của ADMIN
-                    case "Khách hàng": centerContentPanel.add(new KhachHangPanel(), BorderLayout.CENTER); break;
-                    case "Nhà cung cấp": centerContentPanel.add(new NhaCungCapPanel(), BorderLayout.CENTER); break;
+                    case "Quản Lý Khách hàng": centerContentPanel.add(new KhachHangPanel(), BorderLayout.CENTER); break;
+                    case "Quản Lý Nhà cung cấp": centerContentPanel.add(new NhaCungCapPanel(), BorderLayout.CENTER); break;
                     case "Quản Lý Bàn Bida": centerContentPanel.add(new BanBidaPanel(), BorderLayout.CENTER); break;
-                    case "Sản phẩm": centerContentPanel.add(new SanPhamPanel(), BorderLayout.CENTER); break;
-                    case "Nhân viên": centerContentPanel.add(new NhanVienPanel(), BorderLayout.CENTER); break;
-                    case "Quản Lý Tài khoản": centerContentPanel.add(new TaiKhoanPanel(), BorderLayout.CENTER); break;
+                    case "Quản Lý Sản phẩm": centerContentPanel.add(new SanPhamPanel(), BorderLayout.CENTER); break;
+                    case "Quản Lý Nhân viên": centerContentPanel.add(new NhanVienPanel(), BorderLayout.CENTER); break;
+                    case "Quản lý tài khoản": centerContentPanel.add(new TaiKhoanPanel(), BorderLayout.CENTER); break;
                     
                     default: centerContentPanel.add(new JPanel(), BorderLayout.CENTER); break;
                 }
+                
                 centerContentPanel.revalidate();
                 centerContentPanel.repaint();
             });
@@ -149,7 +157,4 @@ public class MainDashboardUI extends JFrame {
             btn.setBorder(new EmptyBorder(15, 45, 15, 0));
         }
     }
-  
-        // Còn nếu muốn chạy thật với LoginUI thì dùng dòng này:
-        // new LoginUI().setVisible(true);
 }

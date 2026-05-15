@@ -35,7 +35,6 @@ public class ThanhToanDialog extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        // --- TÍNH TOÁN DỮ LIỆU ---
         LocalDateTime start = phien.getThoiGianBatDau();
         LocalDateTime end = LocalDateTime.now();
         minutes = Math.max(1, Duration.between(start, end).toMinutes()); 
@@ -47,7 +46,6 @@ public class ThanhToanDialog extends JDialog {
         tienSanPham = ctpDao.tinhTongTienTheoPhien(phien.getMaPhien());
         tongBill = tienBida + tienSanPham;
 
-        // --- GIAO DIỆN ---
         JPanel content = new JPanel(new GridLayout(0, 1, 10, 15));
         content.setBorder(new EmptyBorder(25, 40, 25, 40));
         content.setBackground(Color.WHITE);
@@ -81,7 +79,6 @@ public class ThanhToanDialog extends JDialog {
         lblTongTien.setForeground(LuxuryTheme.NAVY);
         content.add(lblTongTien);
 
-        // --- NÚT XÁC NHẬN (1 Nút Duy Nhất) ---
         JButton btnThanhToan = LuxuryTheme.createButton("XÁC NHẬN THANH TOÁN", LuxuryTheme.TEAL, Color.WHITE);
         btnThanhToan.setPreferredSize(new Dimension(0, 50));
         btnThanhToan.addActionListener(e -> xuLyThanhToan(btnThanhToan));
@@ -102,18 +99,47 @@ public class ThanhToanDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Vui lòng thêm Khách/Nhân viên vào CSDL trước!", "Lỗi", 2); return;
         }
 
-        btn.setEnabled(false); // Khóa nút chống click đúp
+        btn.setEnabled(false); 
         String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
         String maNV = cbNhanVien.getSelectedItem().toString().split(" - ")[0];
 
         try {
-            // 1. Lưu xuống Database
             new PhienChoiDAO().ketThucPhien(phien.getMaPhien(), LocalDateTime.now());
             HoaDonBanDAO hdbDao = new HoaDonBanDAO();
-            HoaDonBan hdb = hdbDao.taoTuPhien(phien.getMaPhien(), maKH, maNV, tienBida);
-            hdbDao.them(hdb);
+            
+            HoaDonBan hdb = hdbDao.layTheoMaPhien(phien.getMaPhien());
+            if (hdb == null) {
+                hdb = hdbDao.taoTuPhien(phien.getMaPhien(), maKH, maNV, tienBida);
+                hdbDao.them(hdb);
+            } else {
+                hdb.setTienBida(tienBida);
+                hdb.setTienSanPham(tienSanPham);
+                hdb.setTongTien(tongBill);
+                hdb.setMaKH(maKH);
+                hdb.setMaNV(maNV);
+                hdbDao.capNhat(hdb);
+            }
 
-            // 2. Hỏi in PDF
+            ChiTietHoaDonBanDAO ctHdbDao = new ChiTietHoaDonBanDAO();
+            ctHdbDao.xoaTheoHoaDon(hdb.getMaHDB()); 
+            List<ChiTietPhien> dsCT = new ChiTietPhienDAO().timTheoMaPhien(phien.getMaPhien());
+            
+            SanPhamDAO spDao = new SanPhamDAO(); // Dùng để trừ kho thật
+
+            for (ChiTietPhien ctPhien : dsCT) {
+                ChiTietHoaDonBan ctBan = new ChiTietHoaDonBan();
+                ctBan.setMaChiTiet(""); 
+                ctBan.setMaHDB(hdb.getMaHDB());
+                ctBan.setMaSP(ctPhien.getMaSanPham());
+                ctBan.setSoLuong(ctPhien.getSoLuong());
+                ctBan.setDonGiaBan(ctPhien.getDonGia());
+                
+                ctHdbDao.themChiTiet(ctBan); 
+
+                // --- TÍNH TIỀN XONG MỚI TRỪ TỒN KHO THỰC TẾ TRONG DATABASE ---
+                spDao.giamTonKho(ctPhien.getMaSanPham(), ctPhien.getSoLuong());
+            }
+
             int confirm = JOptionPane.showConfirmDialog(this, "Thanh toán thành công! Bạn có muốn xuất hóa đơn PDF không?", "In Hóa Đơn", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 taoVaLuuPDF(hdb);
@@ -121,7 +147,7 @@ public class ThanhToanDialog extends JDialog {
 
             paid = true; dispose();
         } catch (Exception ex) { 
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             btn.setEnabled(true);
         }
     }
@@ -140,13 +166,11 @@ public class ThanhToanDialog extends JDialog {
                 PdfWriter.getInstance(document, new FileOutputStream(file));
                 document.open();
 
-                // NẾU MÁY MAC, BẠN THAY ĐƯỜNG DẪN FONT NHÉ. Dưới đây là Font Windows chuẩn
                 BaseFont bf = BaseFont.createFont("C:/Windows/Fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 Font fontTitle = new Font(bf, 16, Font.BOLD);
                 Font fontInfo = new Font(bf, 11, Font.NORMAL);
                 Font fontNormal = new Font(bf, 12, Font.NORMAL);
 
-                // --- DATA FAKE QUÁN ---
                 Paragraph brand = new Paragraph("BILLIARDS CLUB CENTER - LUXURY EDITION", fontTitle);
                 brand.setAlignment(Element.ALIGN_CENTER); document.add(brand);
                 
@@ -157,7 +181,6 @@ public class ThanhToanDialog extends JDialog {
                 phone.setAlignment(Element.ALIGN_CENTER); document.add(phone);
                 document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
 
-                // --- THÔNG TIN HÓA ĐƠN ---
                 document.add(new Paragraph("Mã Hóa Đơn: " + hdb.getMaHDB(), fontNormal));
                 document.add(new Paragraph("Bàn chơi: " + ban.getTenBan(), fontNormal));
                 document.add(new Paragraph("Nhân viên: " + cbNhanVien.getSelectedItem().toString(), fontNormal));
@@ -167,7 +190,6 @@ public class ThanhToanDialog extends JDialog {
                 document.add(new Paragraph(String.format("Tiền Bida (%d phút): %,.0f đ", minutes, tienBida), fontNormal));
                 document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
 
-                // --- BẢNG CHI TIẾT ---
                 document.add(new Paragraph("Chi tiết gọi đồ:", fontNormal));
                 document.add(new Paragraph(" "));
                 PdfPTable table = new PdfPTable(3); 
@@ -195,7 +217,7 @@ public class ThanhToanDialog extends JDialog {
                 thanks.setAlignment(Element.ALIGN_CENTER); document.add(thanks);
 
                 document.close();
-                Desktop.getDesktop().open(file); // Mở ngay file
+                Desktop.getDesktop().open(file); 
                 
             } catch (Exception e) { JOptionPane.showMessageDialog(this, "Lỗi in PDF: " + e.getMessage()); }
         }

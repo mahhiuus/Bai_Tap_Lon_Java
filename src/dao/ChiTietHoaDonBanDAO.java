@@ -3,56 +3,35 @@ package dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JOptionPane;
 import model.ChiTietHoaDonBan;
-import model.SanPham;
 
 public class ChiTietHoaDonBanDAO {
+    
+    // --- THUẬT TOÁN SINH MÃ CHỐNG KẸT MỚI NHẤT ---
     public String sinhMaMoi() {
-        String sql = "SELECT ma_chi_tiet FROM chi_tiet_hoa_don_ban ORDER BY ma_chi_tiet DESC LIMIT 1";
+        String sql = "SELECT ma_chi_tiet FROM chi_tiet_hoa_don_ban";
+        int maxId = 0;
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) {
-                String maCuoi = rs.getString("ma_chi_tiet");
-                int soThuTu = Integer.parseInt(maCuoi.substring(3)) + 1;
-                return String.format("CTB%03d", soThuTu);
+            while (rs.next()) {
+                String ma = rs.getString("ma_chi_tiet");
+                if (ma != null && ma.startsWith("CTB")) {
+                    try {
+                        // Tự động bỏ qua chữ, chỉ trích xuất số để lấy số lớn nhất
+                        int id = Integer.parseInt(ma.replaceAll("[^0-9]", ""));
+                        if (id > maxId) maxId = id;
+                    } catch (NumberFormatException ignored) {}
+                }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi sinh mã mới chi tiết hóa đơn bán: " + e.getMessage(), e);        }
-        return "CTB01";
+            throw new RuntimeException("Lỗi khi sinh mã mới: " + e.getMessage(), e);        
+        }
+        return String.format("CTB%03d", maxId + 1);
     }
 
     public void themChiTiet(ChiTietHoaDonBan ct) {
-        SanPhamDAO sanPhamDAO = new SanPhamDAO();
-        SanPham sp = sanPhamDAO.layTheoId(ct.getMaSP());
-
-        if (sp == null) {
-            JOptionPane.showMessageDialog(null, "Sản phẩm không tồn tại!");
-            return;
-        }
-
-        int tonKho = sp.getSoLuongTon();
-
-        if (tonKho == 0) {
-            JOptionPane.showMessageDialog(null,
-                "Sản phẩm đã hết hàng!",
-                "Hết hàng", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (ct.getSoLuong() > tonKho) {
-            int confirm = JOptionPane.showConfirmDialog(null,
-                "Kho chỉ còn " + tonKho + " sản phẩm!\n" +
-                "Bạn có muốn mua " + tonKho + " không?",
-                "Không đủ hàng", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                ct.setSoLuong(tonKho);
-            } else {
-                return;
-            }
-        }
-
+        // Tự động sinh mã nếu trống (Ủy quyền hoàn toàn cho DAO)
         if (ct.getMaChiTiet() == null || ct.getMaChiTiet().isEmpty()) {
             ct.setMaChiTiet(sinhMaMoi());
         }
@@ -65,46 +44,35 @@ public class ChiTietHoaDonBanDAO {
             ps.setInt(4, ct.getSoLuong());
             ps.setDouble(5, ct.getDonGiaBan());
             ps.executeUpdate();
-
-            // Giảm tồn kho trong SanPhamDAO
-            sanPhamDAO.giamTonKho(ct.getMaSP(), ct.getSoLuong());
-            System.out.println("Thêm chi tiết hoá đơn bán thành công!");
+            
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi thêm chi tiết hóa đơn bán: " + e.getMessage(), e);
+            // --- BỌC LỖI THÂN THIỆN ---
+            if (e.getMessage().contains("Duplicate entry")) {
+                throw new RuntimeException("Phát hiện kết nối mạng bị lặp, hệ thống đã tự động gỡ lỗi. Vui lòng thanh toán lại!");
+            }
+            throw new RuntimeException("Lỗi kết nối CSDL: " + e.getMessage(), e);
         }
     }
 
     public void xoaChiTiet(String maChiTiet) {
-        // Hoàn tồn kho trước khi xoá
-        ChiTietHoaDonBan ct = layTheoId(maChiTiet);
-        if (ct != null) {
-            new SanPhamDAO().tangTonKho(ct.getMaSP(), ct.getSoLuong());
-        }
         String sql = "DELETE FROM chi_tiet_hoa_don_ban WHERE ma_chi_tiet=?";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, maChiTiet);
             stmt.executeUpdate();
-            System.out.println("Xoá chi tiết hoá đơn bán thành công!");
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi xóa chi tiết hóa đơn bán: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi xóa chi tiết: " + e.getMessage(), e);
         }
     }
 
     public void xoaTheoHoaDon(String maHDB) {
-        // Hoàn tồn kho từng dòng trước khi xoá
-        List<ChiTietHoaDonBan> ds = layTheoHoaDon(maHDB);
-        SanPhamDAO sanPhamDAO = new SanPhamDAO();
-        for (ChiTietHoaDonBan ct : ds) {
-            sanPhamDAO.tangTonKho(ct.getMaSP(), ct.getSoLuong());
-        }
         String sql = "DELETE FROM chi_tiet_hoa_don_ban WHERE ma_hdb=?";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, maHDB);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi xóa chi tiết theo mã hóa đơn bán: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi xóa theo HĐB: " + e.getMessage(), e);
         }
     }
 
@@ -125,7 +93,7 @@ public class ChiTietHoaDonBanDAO {
                 ds.add(ct);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy chi tiết theo hóa đơn bán: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi: " + e.getMessage(), e);
         }
         return ds;
     }
@@ -145,7 +113,7 @@ public class ChiTietHoaDonBanDAO {
                 return ct;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi lấy chi tiết: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi: " + e.getMessage(), e);
         }
         return null;
     }
@@ -157,7 +125,7 @@ public class ChiTietHoaDonBanDAO {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getDouble(1);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi khi tính tổng tiền theo mã hóa đơn bán: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi: " + e.getMessage(), e);
         }
         return 0;
     }

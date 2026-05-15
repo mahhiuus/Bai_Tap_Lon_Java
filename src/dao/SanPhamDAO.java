@@ -185,4 +185,15 @@ public class SanPhamDAO {
             ps.setInt(1, soLuong); ps.setString(2, maSP); ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
+
+    // --- MỚI THÊM: Tính giá nhập trung bình tự động ---
+    public double tinhGiaNhapTrungBinh(String maSP) {
+        String sql = "SELECT SUM(so_luong * don_gia_nhap) / SUM(so_luong) FROM chi_tiet_hoa_don_nhap WHERE ma_sp=?";
+        try(PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)){
+            ps.setString(1, maSP);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) return rs.getDouble(1);
+        }catch(Exception e){}
+        return 0;
+    }
 }
