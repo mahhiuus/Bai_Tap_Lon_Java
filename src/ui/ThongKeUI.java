@@ -19,13 +19,11 @@ import org.knowm.xchart.style.Styler.LegendPosition;
 // Import DAO
 import dao.ThongKeDao;
 
-// Đổi từ JFrame sang JPanel
 public class ThongKeUI extends JPanel {
 
     private ThongKeDao thongKeDao;
     private DecimalFormat currencyFormat;
     
-    // Khai báo các container chứa chart để update khi lọc
     private JPanel chartContainerNgay;
     private JPanel chartContainerThang;
     
@@ -38,7 +36,7 @@ public class ThongKeUI extends JPanel {
         currencyFormat = new DecimalFormat("#,### VNĐ");
 
         setLayout(new BorderLayout(20, 20));
-        setBackground(LuxuryTheme.CREAM); // Nền màu Cream
+        setBackground(LuxuryTheme.CREAM);
         setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // HEADER
@@ -54,15 +52,19 @@ public class ThongKeUI extends JPanel {
         JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 20, 0));
         cardsPanel.setBackground(LuxuryTheme.CREAM);
 
-        String dtThangNay = currencyFormat.format(thongKeDao.getDoanhThuThangHienTai());
+        // Tính toán các thông số
+        double doanhThu = thongKeDao.getDoanhThuThangHienTai();
+        double giaVon = thongKeDao.getGiaVonThangHienTai();
+        double loiNhuan = doanhThu - giaVon; // Lãi gộp = Doanh Thu - Tiền vốn nhập hàng
+
+        String dtThangNay = currencyFormat.format(doanhThu);
         String hdThangNay = String.valueOf(thongKeDao.getSoHoaDonThangHienTai());
-        String khThangNay = String.valueOf(thongKeDao.getKhachHangMoiThangHienTai());
+        String lnThangNay = currencyFormat.format(loiNhuan); // Thay thế Khách Hàng bằng LỢI NHUẬN
         String banHoatDong = String.valueOf(thongKeDao.getSoBanDangHoatDong());
 
-        // Sử dụng Icon Emoji đã được thu nhỏ
         cardsPanel.add(createStatCard("Doanh thu tháng", dtThangNay,"💰" ));
+        cardsPanel.add(createStatCard("Lợi nhuận gộp", lnThangNay, "📈")); // Thẻ Lợi Nhuận
         cardsPanel.add(createStatCard("Số hóa đơn tháng", hdThangNay, "📄"));
-        cardsPanel.add(createStatCard("Khách hàng mới", khThangNay, "👤"));
         cardsPanel.add(createStatCard("Bàn đang hoạt động", banHoatDong, "🎱"));
         
         centerArea.add(cardsPanel, BorderLayout.NORTH);
@@ -82,15 +84,11 @@ public class ThongKeUI extends JPanel {
         add(centerArea, BorderLayout.CENTER);
     }
 
-    /**
-     * TẠO TAB 1: DOANH SỐ THEO NGÀY
-     */
     private JPanel createTabTheoNgay() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Bộ lọc Từ ngày - Đến ngày
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterPanel.setBackground(Color.WHITE);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -119,24 +117,19 @@ public class ThongKeUI extends JPanel {
         filterPanel.add(btnLoc);
         panel.add(filterPanel, BorderLayout.NORTH);
 
-        // Chứa biểu đồ
         chartContainerNgay = new JPanel(new BorderLayout());
         chartContainerNgay.setBackground(Color.WHITE);
-        loadChartDataNgay(today.minusDays(6), today); // Load mặc định 7 ngày
+        loadChartDataNgay(today.minusDays(6), today); 
         panel.add(chartContainerNgay, BorderLayout.CENTER);
 
         return panel;
     }
 
-    /**
-     * TẠO TAB 2: DOANH SỐ THEO THÁNG
-     */
     private JPanel createTabTheoThang() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Bộ lọc theo Năm
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterPanel.setBackground(Color.WHITE);
 
@@ -155,37 +148,38 @@ public class ThongKeUI extends JPanel {
         filterPanel.add(btnLoc);
         panel.add(filterPanel, BorderLayout.NORTH);
 
-        // Chứa biểu đồ
         chartContainerThang = new JPanel(new BorderLayout());
         chartContainerThang.setBackground(Color.WHITE);
-        loadChartDataThang(currentYear); // Load mặc định năm hiện tại
+        loadChartDataThang(currentYear); 
         panel.add(chartContainerThang, BorderLayout.CENTER);
 
         return panel;
     }
 
-    /**
-     * VẼ BIỂU ĐỒ THEO NGÀY
-     */
+    // --- BIỂU ĐỒ KÉP: DOANH THU & LỢI NHUẬN (NGÀY) ---
     private void loadChartDataNgay(LocalDate tuNgay, LocalDate denNgay) {
         List<Map<String, Object>> data = thongKeDao.getDuLieuBieuDoTheoNgay(tuNgay, denNgay);
         List<String> xData = new ArrayList<>();
-        List<Double> yTienBida = new ArrayList<>();
-        List<Double> yTienSP = new ArrayList<>();
+        List<Double> yDoanhThu = new ArrayList<>();
+        List<Double> yLoiNhuan = new ArrayList<>();
 
         if (data.isEmpty()) {
-            xData.add("Không có DL"); yTienBida.add(0.0); yTienSP.add(0.0);
+            xData.add("Không có DL"); yDoanhThu.add(0.0); yLoiNhuan.add(0.0);
         } else {
             for (Map<String, Object> row : data) {
                 xData.add((String) row.get("ngay_ban_label"));
-                yTienBida.add((Double) row.get("tien_bida"));
-                yTienSP.add((Double) row.get("tien_sp"));
+                
+                // --- CHIA CHO 1 TRIỆU ĐỂ HIỂN THỊ ĐƠN VỊ TRIỆU VNĐ ---
+                double dt = (Double) row.get("doanh_thu");
+                double ln = (Double) row.get("loi_nhuan");
+                yDoanhThu.add(dt / 1000000.0);
+                yLoiNhuan.add(ln / 1000000.0);
             }
         }
 
-        CategoryChart chart = taoKhungBieuDo("Doanh thu từ " + tuNgay + " đến " + denNgay, "Ngày");
-        chart.addSeries("Tiền Bida", xData, yTienBida);
-        chart.addSeries("Tiền Sản Phẩm", xData, yTienSP);
+        CategoryChart chart = taoKhungBieuDo("Thống kê tài chính từ " + tuNgay + " đến " + denNgay, "Ngày");
+        chart.addSeries("Doanh Thu", xData, yDoanhThu);
+        chart.addSeries("Lợi Nhuận", xData, yLoiNhuan);
 
         chartContainerNgay.removeAll();
         chartContainerNgay.add(new XChartPanel<>(chart), BorderLayout.CENTER);
@@ -193,28 +187,30 @@ public class ThongKeUI extends JPanel {
         chartContainerNgay.repaint();
     }
 
-    /**
-     * VẼ BIỂU ĐỒ THEO THÁNG
-     */
+    // --- BIỂU ĐỒ KÉP: DOANH THU & LỢI NHUẬN (THÁNG) ---
     private void loadChartDataThang(int nam) {
         List<Map<String, Object>> data = thongKeDao.getDuLieuBieuDoTheoThang(nam);
         List<String> xData = new ArrayList<>();
-        List<Double> yTienBida = new ArrayList<>();
-        List<Double> yTienSP = new ArrayList<>();
+        List<Double> yDoanhThu = new ArrayList<>();
+        List<Double> yLoiNhuan = new ArrayList<>();
 
         if (data.isEmpty()) {
-            xData.add("Không có DL"); yTienBida.add(0.0); yTienSP.add(0.0);
+            xData.add("Không có DL"); yDoanhThu.add(0.0); yLoiNhuan.add(0.0);
         } else {
             for (Map<String, Object> row : data) {
                 xData.add((String) row.get("thang_label"));
-                yTienBida.add((Double) row.get("tien_bida"));
-                yTienSP.add((Double) row.get("tien_sp"));
+                
+                // --- CHIA CHO 1 TRIỆU ĐỂ HIỂN THỊ ĐƠN VỊ TRIỆU VNĐ ---
+                double dt = (Double) row.get("doanh_thu");
+                double ln = (Double) row.get("loi_nhuan");
+                yDoanhThu.add(dt / 1000000.0);
+                yLoiNhuan.add(ln / 1000000.0);
             }
         }
 
-        CategoryChart chart = taoKhungBieuDo("Doanh thu năm " + nam, "Tháng");
-        chart.addSeries("Tiền Bida", xData, yTienBida);
-        chart.addSeries("Tiền Sản Phẩm", xData, yTienSP);
+        CategoryChart chart = taoKhungBieuDo("Thống kê tài chính năm " + nam, "Tháng");
+        chart.addSeries("Doanh Thu", xData, yDoanhThu);
+        chart.addSeries("Lợi Nhuận", xData, yLoiNhuan);
 
         chartContainerThang.removeAll();
         chartContainerThang.add(new XChartPanel<>(chart), BorderLayout.CENTER);
@@ -222,26 +218,25 @@ public class ThongKeUI extends JPanel {
         chartContainerThang.repaint();
     }
 
-    /**
-     * Cấu hình form chuẩn dùng chung cho XChart
-     */
     private CategoryChart taoKhungBieuDo(String title, String xAxisTitle) {
+        // Đổi yAxisTitle thành "Triệu VNĐ"
         CategoryChart chart = new CategoryChartBuilder().width(800).height(350).title(title)
-                .xAxisTitle(xAxisTitle).yAxisTitle("Doanh thu (VNĐ)").build();
+                .xAxisTitle(xAxisTitle).yAxisTitle("Số tiền (Triệu VNĐ)").build();
 
         chart.getStyler().setLegendPosition(LegendPosition.InsideNW);
         chart.getStyler().setPlotGridLinesVisible(true);
         chart.getStyler().setPlotGridLinesColor(new Color(230, 230, 230));
         chart.getStyler().setChartBackgroundColor(Color.WHITE);
         chart.getStyler().setPlotBackgroundColor(Color.WHITE);
-        // PHỐI MÀU BIỂU ĐỒ: Màu Navy (Tiền bida) và Vàng Gold (Sản phẩm)
+        
+        // --- ÉP ĐỊNH DẠNG SỐ BÌNH THƯỜNG (KHÔNG DÙNG 1E4, 1E5) ---
+        chart.getStyler().setYAxisDecimalPattern("#,##0.##");
+        
+        // Màu Navy (Doanh Thu) & Vàng Gold (Lợi Nhuận) tạo sự tương phản chuẩn Luxury
         chart.getStyler().setSeriesColors(new Color[] { LuxuryTheme.NAVY, LuxuryTheme.GOLD }); 
         return chart;
     }
 
-    /**
-     * Tạo Thẻ thông số chuẩn Luxury
-     */
     private JPanel createStatCard(String title, String value, String fontAwesomeIcon) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
@@ -261,13 +256,12 @@ public class ThongKeUI extends JPanel {
 
         JLabel lblValue = new JLabel(value);
         lblValue.setFont(new Font("Arial", Font.BOLD, 22));
-        lblValue.setForeground(LuxuryTheme.NAVY); // Chữ màu NAVY
+        lblValue.setForeground(LuxuryTheme.NAVY); 
 
         textPanel.add(lblTitle);
         textPanel.add(Box.createVerticalStrut(10));
         textPanel.add(lblValue);
 
-        // Icon Emoji được thu nhỏ xuống size 31
         JLabel lblIcon = new JLabel(fontAwesomeIcon);
         lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 30)); 
         lblIcon.setForeground(LuxuryTheme.GOLD);

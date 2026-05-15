@@ -3,72 +3,77 @@ package model;
 public class SanPham {
     private String maSP;
     private String tenSP;
-    private String loaiSP; //Do an, Do uong, Dung cu
+    private String loaiSP; // Do an, Do uong, Dung cu
     private double giaBan;
     private int soLuongTon;
     private String maNCC;
+    private String hinhAnh; // <-- BIẾN LƯU ĐƯỜNG DẪN ẢNH
 
-    //Ham khoi tao khong tham so
-    public SanPham(){
+    // Hàm khởi tạo không tham số
+    public SanPham() {
         maSP = "";
         tenSP = "";
         loaiSP = "";
         giaBan = 0;
         soLuongTon = 0;
         maNCC = "";
+        hinhAnh = "";
     }
 
-    //Ham khoi tao co tham so
-    public SanPham(String maSP, String tenSP, String loaiSP, double giaBan, int soLuongTon, String maNCC){
+    // Hàm khởi tạo có tham số
+    public SanPham(String maSP, String tenSP, String loaiSP, double giaBan, int soLuongTon, String maNCC, String hinhAnh) {
         this.maSP = maSP;
         this.tenSP = tenSP;
         this.loaiSP = loaiSP;
         this.giaBan = giaBan;
         this.soLuongTon = soLuongTon;
         this.maNCC = maNCC;
+        this.hinhAnh = hinhAnh;
     }
 
-    //Pthuc Get
-    public String getMaSP(){ return maSP;}
-    public String getTenSP(){ return tenSP;}
-    public String getLoaiSP(){ return loaiSP;}
-    public double getGiaBan(){ return giaBan;}
-    public int getSoLuongTon(){ return soLuongTon;}
-    public String getMaNCC(){ return maNCC;}
+    // Pthuc Get
+    public String getMaSP() { return maSP; }
+    public String getTenSP() { return tenSP; }
+    public String getLoaiSP() { return loaiSP; }
+    public double getGiaBan() { return giaBan; }
+    public int getSoLuongTon() { return soLuongTon; }
+    public String getMaNCC() { return maNCC; }
+    public String getHinhAnh() { return hinhAnh; }
 
-    //Pthuc set
-    public void setMaSP(String maSP){ this.maSP = maSP; }
-    public void setTenSP(String tenSP){
+    // Pthuc set
+    public void setMaSP(String maSP) { this.maSP = maSP; }
+    public void setTenSP(String tenSP) {
         if (tenSP == null) {
             throw new IllegalArgumentException("Tên sản phẩm không được để trống");
         }
         this.tenSP = tenSP.trim();
     }
-    public void setLoaiSP(String loaiSP){ 
+    public void setLoaiSP(String loaiSP) { 
         if (loaiSP == null || loaiSP.trim().isEmpty()) {
             throw new IllegalArgumentException("Loại sản phẩm không được để trống!");
         }
-        String l = loaiSP.trim().toUpperCase(); // Chuyển về chữ hoa để so sánh cho chính xác
+        String l = loaiSP.trim().toUpperCase(); 
         if (l.equals("DO_AN") || l.equals("DO_UONG") || l.equals("DUNG_CU")) {
             loaiSP = l;
-        }else {
+        } else {
              throw new IllegalArgumentException("Loại sản phẩm phải là: DO_AN, DO_UONG hoặc DUNG_CU!");
         }
         this.loaiSP = loaiSP; 
     }
-    public void setGiaBan(double giaBan){
+    public void setGiaBan(double giaBan) {
         if (giaBan < 0) {
-        throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
-    }
+            throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
+        }
         this.giaBan = giaBan;
     }
-    public void setSoLuongTon(int soLuongTon){
+    public void setSoLuongTon(int soLuongTon) {
         if (soLuongTon < 0) {
-        throw new IllegalArgumentException("Số lượng tồn không được nhỏ hơn 0!");
+            throw new IllegalArgumentException("Số lượng tồn không được nhỏ hơn 0!");
         }
-        this.soLuongTon =  soLuongTon;
+        this.soLuongTon = soLuongTon;
     }
-    public void setMaNCC(String maNCC){ this.maNCC = maNCC; }
+    public void setMaNCC(String maNCC) { this.maNCC = maNCC; }
+    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
 
     @Override
     public String toString() {
@@ -78,7 +83,8 @@ public class SanPham {
              + "loaiSP = " + loaiSP + " / "
              + "giaBan = " + giaBan + " / "
              + "soLuongton = " + soLuongTon + " / "
-             + "maNCC = " + maNCC
+             + "maNCC = " + maNCC + " / "
+             + "hinhAnh = " + hinhAnh
              + "}";
     }
 }

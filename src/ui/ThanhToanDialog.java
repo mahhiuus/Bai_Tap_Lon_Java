@@ -1,20 +1,17 @@
 package ui;
 
-import model.BanBida;
-import model.PhienChoi;
-import model.HoaDonBan;
-import model.NhanVien;  
-import model.KhachHang;
+import model.*;
+import dao.*;
 
-import dao.PhienChoiDAO;
-import dao.ChiTietPhienDAO;
-import dao.HoaDonBanDAO;
-import dao.NhanVienDAO;
-import dao.KhachHangDAO;
+import com.itextpdf.text.*;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,148 +21,205 @@ public class ThanhToanDialog extends JDialog {
     private JTextField txtTienDoAn;
     private JLabel lblTongTien;
     private double giaGio, tienBida, tienSanPham, tongBill;
+    private long minutes;
+    private BanBida ban;
+    private PhienChoi phien;
     
-    private JComboBox<String> cbKhachHang;
-    private JComboBox<String> cbNhanVien;
+    private JComboBox<String> cbKhachHang, cbNhanVien;
 
     public ThanhToanDialog(Frame owner, BanBida ban, PhienChoi phien) {
-        super(owner, "Thanh Toán Hóa Đơn - " + ban.getTenBan(), true);
-        setSize(500, 650); 
+        super(owner, "Thanh Toán - " + ban.getTenBan(), true);
+        this.ban = ban; this.phien = phien;
+        
+        setSize(500, 680); 
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        // --- 1. TÍNH TOÁN DỮ LIỆU ---
         LocalDateTime start = phien.getThoiGianBatDau();
         LocalDateTime end = LocalDateTime.now();
-        long minutes = Math.max(1, Duration.between(start, end).toMinutes()); 
+        minutes = Math.max(1, Duration.between(start, end).toMinutes()); 
         
         giaGio = ban.getLoaiBan().equals("VIP") ? 80000 : 50000;
         tienBida = (minutes / 60.0) * giaGio;
 
         ChiTietPhienDAO ctpDao = new ChiTietPhienDAO();
         tienSanPham = ctpDao.tinhTongTienTheoPhien(phien.getMaPhien());
-        
         tongBill = tienBida + tienSanPham;
 
-        // --- 2. CẤU HÌNH GIAO DIỆN ---
         JPanel content = new JPanel(new GridLayout(0, 1, 10, 15));
         content.setBorder(new EmptyBorder(25, 40, 25, 40));
         content.setBackground(Color.WHITE);
 
         JLabel lblHeader = new JLabel("Chi tiết sử dụng dịch vụ");
-        lblHeader.setFont(new Font("Arial", Font.BOLD, 20));
+        lblHeader.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
         lblHeader.setForeground(LuxuryTheme.NAVY);
         content.add(lblHeader);
 
         content.add(new JLabel("Giờ bắt đầu: " + start.format(DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy"))));
         content.add(new JLabel("Giờ kết thúc: " + end.format(DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy"))));
-        content.add(new JLabel("Tổng thời gian chơi: " + minutes + " phút"));
+        content.add(new JLabel("Tổng thời gian: " + minutes + " phút"));
         content.add(new JLabel("Thành tiền Bida: " + String.format("%,.0f VNĐ", tienBida)));
 
         content.add(new JLabel("Tiền Đồ ăn / Thức uống:"));
         txtTienDoAn = LuxuryTheme.createTextField();
         txtTienDoAn.setText(String.format("%,.0f VNĐ", tienSanPham));
-        txtTienDoAn.setEditable(false);
-        txtTienDoAn.setBackground(new Color(245, 245, 245));
-        txtTienDoAn.setForeground(Color.RED);
+        txtTienDoAn.setEditable(false); txtTienDoAn.setForeground(Color.RED);
         content.add(txtTienDoAn);
 
-        // --- COMBOBOX NHÂN VIÊN & KHÁCH HÀNG ---
-        content.add(new JLabel("Nhân viên thực hiện:"));
-        cbNhanVien = new JComboBox<>();
-        cbNhanVien.setBackground(Color.WHITE);
-        content.add(cbNhanVien);
+        content.add(new JLabel("Khách Hàng:"));
+        cbKhachHang = new JComboBox<>(); cbKhachHang.setBackground(Color.WHITE); content.add(cbKhachHang);
 
-        content.add(new JLabel("Khách hàng thanh toán:"));
-        cbKhachHang = new JComboBox<>();
-        cbKhachHang.setBackground(Color.WHITE);
-        content.add(cbKhachHang);
+        content.add(new JLabel("Nhân Viên:"));
+        cbNhanVien = new JComboBox<>(); cbNhanVien.setBackground(Color.WHITE); content.add(cbNhanVien);
 
-        // GỌI HÀM ĐỔ DỮ LIỆU TỪ DATABASE
         loadDataToComboBox();
 
-        lblTongTien = new JLabel("TỔNG THANH TOÁN: " + String.format("%,.0f VNĐ", tongBill));
-        lblTongTien.setFont(new Font("Arial", Font.BOLD, 22));
+        lblTongTien = new JLabel("TỔNG CỘNG: " + String.format("%,.0f VNĐ", tongBill));
+        lblTongTien.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
         lblTongTien.setForeground(LuxuryTheme.NAVY);
-        lblTongTien.setBorder(new EmptyBorder(15, 0, 0, 0));
         content.add(lblTongTien);
 
-        // --- 3. NÚT XÁC NHẬN ---
-        JButton btnPay = LuxuryTheme.createButton("XUẤT HÓA ĐƠN", LuxuryTheme.TEAL, Color.WHITE);
-        btnPay.setPreferredSize(new Dimension(0, 60));
-        
-        btnPay.addActionListener(e -> {
-            // KHÓA NÚT BẤM ĐỂ CHỐNG SPAM CLICK LÀM TẠO 2 HÓA ĐƠN
-            btnPay.setEnabled(false); 
-            
-            try {
-                if (cbKhachHang.getSelectedItem() == null || cbNhanVien.getSelectedItem() == null) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng chọn Khách hàng và Nhân viên!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    btnPay.setEnabled(true);
-                    return;
-                }
-                
-                if (cbKhachHang.getSelectedItem().toString().contains("Chưa có dữ liệu") || cbNhanVien.getSelectedItem().toString().contains("Chưa có dữ liệu")) {
-                    JOptionPane.showMessageDialog(this, "Trong Database chưa có dữ liệu Khách Hàng hoặc Nhân Viên. Vui lòng thêm trước!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    btnPay.setEnabled(true);
-                    return;
-                }
-
-                String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
-                String maNV = cbNhanVien.getSelectedItem().toString().split(" - ")[0];
-
-                PhienChoiDAO pcDao = new PhienChoiDAO();
-                pcDao.ketThucPhien(phien.getMaPhien(), end);
-
-                HoaDonBanDAO hdbDao = new HoaDonBanDAO();
-                HoaDonBan hdb = hdbDao.taoTuPhien(phien.getMaPhien(), maKH, maNV, tienBida);
-                
-                if (hdb != null) {
-                    hdbDao.them(hdb);
-                    JOptionPane.showMessageDialog(this, "Thanh toán thành công! Mã HĐ: " + hdb.getMaHDB(), "Hoàn tất", JOptionPane.INFORMATION_MESSAGE);
-                    paid = true;
-                    dispose();
-                } else {
-                    btnPay.setEnabled(true);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi lưu DB: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                btnPay.setEnabled(true); // Lỗi thì mở lại nút để thử lại
-            }
-        });
+        JButton btnThanhToan = LuxuryTheme.createButton("XÁC NHẬN THANH TOÁN", LuxuryTheme.TEAL, Color.WHITE);
+        btnThanhToan.setPreferredSize(new Dimension(0, 50));
+        btnThanhToan.addActionListener(e -> xuLyThanhToan(btnThanhToan));
 
         add(new JScrollPane(content), BorderLayout.CENTER);
-        add(btnPay, BorderLayout.SOUTH);
+        add(btnThanhToan, BorderLayout.SOUTH);
     }
 
-    // =====================================================================
-    // HÀM XỬ LÝ ĐỔ DỮ LIỆU TỪ DAO LÊN GIAO DIỆN COMBOBOX
-    // =====================================================================
     private void loadDataToComboBox() {
+        for (KhachHang kh : new KhachHangDAO().getAllKhachHang()) cbKhachHang.addItem(kh.getMaKH() + " - " + kh.getTenKH());
+        for (NhanVien nv : new NhanVienDAO().layTatCaNhanVien()) cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV());
+        if(cbKhachHang.getItemCount()==0) cbKhachHang.addItem("--- Trống ---");
+        if(cbNhanVien.getItemCount()==0) cbNhanVien.addItem("--- Trống ---");
+    }
+
+    private void xuLyThanhToan(JButton btn) {
+        if (cbKhachHang.getSelectedItem().toString().contains("Trống") || cbNhanVien.getSelectedItem().toString().contains("Trống")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng thêm Khách/Nhân viên vào CSDL trước!", "Lỗi", 2); return;
+        }
+
+        btn.setEnabled(false); 
+        String maKH = cbKhachHang.getSelectedItem().toString().split(" - ")[0];
+        String maNV = cbNhanVien.getSelectedItem().toString().split(" - ")[0];
+
         try {
-            NhanVienDAO nvDao = new NhanVienDAO();
-            List<NhanVien> dsNV = nvDao.layTatCaNhanVien(); 
-            cbNhanVien.removeAllItems();
-            if (dsNV != null && !dsNV.isEmpty()) {
-                for (NhanVien nv : dsNV) {
-                    cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV()); 
-                }
+            new PhienChoiDAO().ketThucPhien(phien.getMaPhien(), LocalDateTime.now());
+            HoaDonBanDAO hdbDao = new HoaDonBanDAO();
+            
+            HoaDonBan hdb = hdbDao.layTheoMaPhien(phien.getMaPhien());
+            if (hdb == null) {
+                hdb = hdbDao.taoTuPhien(phien.getMaPhien(), maKH, maNV, tienBida);
+                hdbDao.them(hdb);
             } else {
-                cbNhanVien.addItem("--- Chưa có dữ liệu NV ---");
+                hdb.setTienBida(tienBida);
+                hdb.setTienSanPham(tienSanPham);
+                hdb.setTongTien(tongBill);
+                hdb.setMaKH(maKH);
+                hdb.setMaNV(maNV);
+                hdbDao.capNhat(hdb);
             }
 
-            KhachHangDAO khDao = new KhachHangDAO();
-            List<KhachHang> dsKH = khDao.getAllKhachHang();
-            cbKhachHang.removeAllItems();
-            if (dsKH != null && !dsKH.isEmpty()) {
-                for (KhachHang kh : dsKH) {
-                    cbKhachHang.addItem(kh.getMaKH() + " - " + kh.getTenKH());
-                }
-            } else {
-                cbKhachHang.addItem("--- Chưa có dữ liệu KH ---");
+            ChiTietHoaDonBanDAO ctHdbDao = new ChiTietHoaDonBanDAO();
+            ctHdbDao.xoaTheoHoaDon(hdb.getMaHDB()); 
+            List<ChiTietPhien> dsCT = new ChiTietPhienDAO().timTheoMaPhien(phien.getMaPhien());
+            
+            SanPhamDAO spDao = new SanPhamDAO(); // Dùng để trừ kho thật
+
+            for (ChiTietPhien ctPhien : dsCT) {
+                ChiTietHoaDonBan ctBan = new ChiTietHoaDonBan();
+                ctBan.setMaChiTiet(""); 
+                ctBan.setMaHDB(hdb.getMaHDB());
+                ctBan.setMaSP(ctPhien.getMaSanPham());
+                ctBan.setSoLuong(ctPhien.getSoLuong());
+                ctBan.setDonGiaBan(ctPhien.getDonGia());
+                
+                ctHdbDao.themChiTiet(ctBan); 
+
+                // --- TÍNH TIỀN XONG MỚI TRỪ TỒN KHO THỰC TẾ TRONG DATABASE ---
+                spDao.giamTonKho(ctPhien.getMaSanPham(), ctPhien.getSoLuong());
             }
-        } catch (Exception e) {
-            System.err.println("Chưa thể load ComboBox: " + e.getMessage());
+
+            int confirm = JOptionPane.showConfirmDialog(this, "Thanh toán thành công! Bạn có muốn xuất hóa đơn PDF không?", "In Hóa Đơn", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                taoVaLuuPDF(hdb);
+            }
+
+            paid = true; dispose();
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            btn.setEnabled(true);
+        }
+    }
+
+    private void taoVaLuuPDF(HoaDonBan hdb) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn nơi lưu Hóa Đơn PDF");
+        fileChooser.setSelectedFile(new File(hdb.getMaHDB() + "_Bill.pdf"));
+        
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (!file.getName().toLowerCase().endsWith(".pdf")) file = new File(file.getParentFile(), file.getName() + ".pdf");
+
+            try {
+                Document document = new Document(PageSize.A5);
+                PdfWriter.getInstance(document, new FileOutputStream(file));
+                document.open();
+
+                BaseFont bf = BaseFont.createFont("C:/Windows/Fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                Font fontTitle = new Font(bf, 16, Font.BOLD);
+                Font fontInfo = new Font(bf, 11, Font.NORMAL);
+                Font fontNormal = new Font(bf, 12, Font.NORMAL);
+
+                Paragraph brand = new Paragraph("BILLIARDS CLUB CENTER - LUXURY EDITION", fontTitle);
+                brand.setAlignment(Element.ALIGN_CENTER); document.add(brand);
+                
+                Paragraph address = new Paragraph("Đ/c: 123 Đường Cầu Giấy, Q. Cầu Giấy, Hà Nội", fontInfo);
+                address.setAlignment(Element.ALIGN_CENTER); document.add(address);
+                
+                Paragraph phone = new Paragraph("Hotline: 0988.888.888", fontInfo);
+                phone.setAlignment(Element.ALIGN_CENTER); document.add(phone);
+                document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
+
+                document.add(new Paragraph("Mã Hóa Đơn: " + hdb.getMaHDB(), fontNormal));
+                document.add(new Paragraph("Bàn chơi: " + ban.getTenBan(), fontNormal));
+                document.add(new Paragraph("Nhân viên: " + cbNhanVien.getSelectedItem().toString(), fontNormal));
+                document.add(new Paragraph("Ngày: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), fontNormal));
+                document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
+                
+                document.add(new Paragraph(String.format("Tiền Bida (%d phút): %,.0f đ", minutes, tienBida), fontNormal));
+                document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
+
+                document.add(new Paragraph("Chi tiết gọi đồ:", fontNormal));
+                document.add(new Paragraph(" "));
+                PdfPTable table = new PdfPTable(3); 
+                table.setWidthPercentage(100);
+                table.setWidths(new float[]{4f, 1f, 3f});
+                table.addCell(new Phrase("Tên món", fontNormal));
+                table.addCell(new Phrase("SL", fontNormal));
+                table.addCell(new Phrase("Thành tiền", fontNormal));
+
+                List<ChiTietPhien> dsCT = new ChiTietPhienDAO().timTheoMaPhien(phien.getMaPhien());
+                SanPhamDAO spDao = new SanPhamDAO();
+                for (ChiTietPhien ct : dsCT) {
+                    SanPham sp = spDao.layTheoId(ct.getMaSanPham());
+                    table.addCell(new Phrase(sp != null ? sp.getTenSP() : ct.getMaSanPham(), fontNormal));
+                    table.addCell(new Phrase(String.valueOf(ct.getSoLuong()), fontNormal));
+                    table.addCell(new Phrase(String.format("%,.0f", ct.getDonGia() * ct.getSoLuong()), fontNormal));
+                }
+                document.add(table);
+                
+                document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
+                Paragraph tong = new Paragraph("TỔNG THANH TOÁN: " + String.format("%,.0f VNĐ", tongBill), new Font(bf, 14, Font.BOLD, BaseColor.RED));
+                tong.setAlignment(Element.ALIGN_RIGHT); document.add(tong);
+                
+                Paragraph thanks = new Paragraph("\nXin cảm ơn quý khách và hẹn gặp lại!", fontInfo);
+                thanks.setAlignment(Element.ALIGN_CENTER); document.add(thanks);
+
+                document.close();
+                Desktop.getDesktop().open(file); 
+                
+            } catch (Exception e) { JOptionPane.showMessageDialog(this, "Lỗi in PDF: " + e.getMessage()); }
         }
     }
 
