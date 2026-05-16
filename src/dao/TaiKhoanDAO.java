@@ -184,7 +184,7 @@ public class TaiKhoanDAO {
                     rs.getString("ten_dang_nhap"),
                     rs.getString("mat_khau"),
                     rs.getString("vai_tro"),
-                    rs.getString("ma-nv")
+                    rs.getString("ma_nv")
                 ); 
             }
         } catch (Exception e) {

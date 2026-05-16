@@ -44,7 +44,7 @@ public class ThongKeDao {
 
     // 4. Lấy số Bàn đang hoạt động
     public int getSoBanDangHoatDong() {
-        String sql = "SELECT COUNT(*) FROM phien_choi WHERE trang_thai_phien != 'DA_KET_THUC'";
+        String sql = "SELECT COUNT(*) FROM phien_choi WHERE trang_thai != 'DA_KET_THUC'";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
