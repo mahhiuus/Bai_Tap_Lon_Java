@@ -21,6 +21,10 @@ public class NhanVienPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private NhanVienDAO dao;
+    
+    // --- CẬP NHẬT: Thêm biến cho phân trang ---
+    private List<NhanVien> allData;
+    private PhanTrangPanel phanTrang;
 
     public NhanVienPanel() {
         dao = new NhanVienDAO();
@@ -42,6 +46,7 @@ public class NhanVienPanel extends JPanel {
     private JPanel createFormPanel() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
+        // GIỮ NGUYÊN CHIỀU RỘNG 350px CỦA BẠN
         form.setPreferredSize(new Dimension(350, 0));
         form.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Nhân Viên",
@@ -79,11 +84,13 @@ public class NhanVienPanel extends JPanel {
         dateChooser.setFont(new Font("Arial", Font.PLAIN, 15));
         form.add(dateChooser, gbc);
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setOpaque(false);
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        // --- CẬP NHẬT: Thêm nút Mới ---
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         btnAdd.addActionListener(e -> {
             try {
@@ -109,7 +116,13 @@ public class NhanVienPanel extends JPanel {
             }
         });
 
-        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete);
+        // --- CẬP NHẬT LOGIC NÚT MỚI ---
+        btnClear.addActionListener(e -> {
+            refreshForm();
+            table.clearSelection();
+        });
+
+        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
         gbc.gridy = ++y; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
         return form;
     }
@@ -173,6 +186,11 @@ public class NhanVienPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
+        
+        // --- CẬP NHẬT: GỌI COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -185,15 +203,30 @@ public class NhanVienPanel extends JPanel {
 
     private void refreshForm() {
         txtMaNV.setText(dao.sinhMaMoi());
-        txtTenNV.setText(""); txtSDT.setText(""); dateChooser.setDate(null);
+        txtTenNV.setText(""); txtSDT.setText(""); dateChooser.setDate(null); txtSearch.setText("");
         cbGioiTinh.setSelectedIndex(0); cbChucVu.setSelectedIndex(0);
         loadData(dao.layTatCaNhanVien());
     }
 
+    // --- LOGIC PHÂN TRANG ---
     private void loadData(List<NhanVien> list) {
+        allData = list;
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
+
+    private void updateTableDisplay() {
         tableModel.setRowCount(0);
+        if (allData == null || allData.isEmpty()) {
+            return;
+        }
+        
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for (NhanVien nv : list) {
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+        
+        for (int i = start; i < end; i++) {
+            NhanVien nv = allData.get(i);
             String ngaySinh = nv.getNgaySinh() != null ? nv.getNgaySinh().format(fmt) : "";
             tableModel.addRow(new Object[]{nv.getMaNV(), nv.getTenNV(), nv.getSoDienThoai(), nv.getGioiTinh(), nv.getChucVu(), ngaySinh});
         }

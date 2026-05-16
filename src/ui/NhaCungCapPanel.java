@@ -14,10 +14,13 @@ public class NhaCungCapPanel extends JPanel {
     private JTextField txtMaNCC, txtTenCongTy, txtSDT, txtDiaChi, txtEmail, txtNguoiLienHe, txtSearch;
     private DefaultTableModel tableModel;
     private JTable table;
-    private NhaCungCapDAO dao;
+    private NhaCungCapDAO dao = new NhaCungCapDAO();
+    
+    // --- CẬP NHẬT: Thêm biến cho phân trang ---
+    private List<NhaCungCap> allData;
+    private PhanTrangPanel phanTrang;
 
     public NhaCungCapPanel() {
-        dao = new NhaCungCapDAO();
         setLayout(new BorderLayout(20, 20));
         setBackground(LuxuryTheme.CREAM);
         setBorder(new EmptyBorder(30, 40, 30, 40));
@@ -36,6 +39,7 @@ public class NhaCungCapPanel extends JPanel {
     private JPanel createFormPanel() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
+        // GIỮ NGUYÊN CHIỀU RỘNG 350px CỦA BẠN
         form.setPreferredSize(new Dimension(350, 0));
         form.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Nhà Cung Cấp",
@@ -64,7 +68,7 @@ public class NhaCungCapPanel extends JPanel {
         gbc.gridy = ++y; form.add(createLabel("Người Liên Hệ:"), gbc); gbc.gridy = ++y;
         txtNguoiLienHe = LuxuryTheme.createTextField(); form.add(txtNguoiLienHe, gbc);
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setOpaque(false);
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
@@ -98,7 +102,11 @@ public class NhaCungCapPanel extends JPanel {
             }
         });
 
-        btnClear.addActionListener(e -> refreshForm());
+        // --- CẬP NHẬT LOGIC NÚT MỚI ---
+        btnClear.addActionListener(e -> { 
+            refreshForm(); 
+            table.clearSelection(); 
+        });
 
         btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
         gbc.gridy = ++y; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
@@ -143,6 +151,11 @@ public class NhaCungCapPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
+        
+        // --- CẬP NHẬT: GỌI COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -156,12 +169,28 @@ public class NhaCungCapPanel extends JPanel {
     private void refreshForm() {
         txtMaNCC.setText(dao.sinhMaMoi());
         txtTenCongTy.setText(""); txtSDT.setText(""); txtDiaChi.setText(""); txtEmail.setText(""); txtNguoiLienHe.setText("");
+        txtSearch.setText("");
         loadData(dao.getAllNhaCungCap());
     }
 
+    // --- LOGIC PHÂN TRANG ---
     private void loadData(List<NhaCungCap> list) {
+        allData = list;
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
+
+    private void updateTableDisplay() {
         tableModel.setRowCount(0);
-        for (NhaCungCap n : list) {
+        if (allData == null || allData.isEmpty()) {
+            return;
+        }
+        
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+        
+        for (int i = start; i < end; i++) {
+            NhaCungCap n = allData.get(i);
             tableModel.addRow(new Object[]{n.getMaNCC(), n.getTenCongTy(), n.getSdt(), n.getDiaChi(), n.getEmail(), n.getNguoiLienHe()});
         }
     }

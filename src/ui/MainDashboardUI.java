@@ -34,7 +34,7 @@ public class MainDashboardUI extends JFrame {
         centerContentPanel = new JPanel(new BorderLayout());
         centerContentPanel.setBackground(LuxuryTheme.CREAM);
         
-        centerContentPanel.add(new MenuBanHangPanel(), BorderLayout.CENTER);
+        centerContentPanel.add(new ThongKeUI(), BorderLayout.CENTER);
         
         add(centerContentPanel, BorderLayout.CENTER);
     }
@@ -88,7 +88,7 @@ public class MainDashboardUI extends JFrame {
             btnMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
             btnMenu.setBorder(new EmptyBorder(15, 45, 15, 0));
 
-            if (item.equals("Bán Hàng")) {
+            if (item.equals("Tổng quan")) {
                 setActiveTab(btnMenu);
             }
 

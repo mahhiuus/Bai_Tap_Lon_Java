@@ -9,6 +9,10 @@ import model.HoaDonBan;
 import model.KhachHang;
 
 public class KhachHangDAO {
+
+    
+
+
     public String sinhMaMoi() {
         String sql = "SELECT ma_kh FROM khach_hang ORDER BY ma_kh DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();

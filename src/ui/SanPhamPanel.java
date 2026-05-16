@@ -26,10 +26,10 @@ public class SanPhamPanel extends JPanel {
     private JLabel lblGiaNhapTB; 
     private String currentImagePath = ""; 
     private File selectedFileToCopy = null; 
-    private List<SanPham> allSanPham;
-    private int currentPage = 1;
-    private final int ITEMS_PER_PAGE = 10;
-    private JLabel lblPageInfo;
+    
+    // --- CẬP NHẬT: Biến phân trang ---
+    private List<SanPham> allData;
+    private PhanTrangPanel phanTrang;
 
     public SanPhamPanel() {
         dao = new SanPhamDAO();
@@ -42,7 +42,6 @@ public class SanPhamPanel extends JPanel {
         lblHeader.setForeground(LuxuryTheme.NAVY);
         add(lblHeader, BorderLayout.NORTH);
 
-        // Đã cập nhật Form bên trái với JScrollPane và Docked Buttons
         add(createFormPanel(), BorderLayout.WEST);
         add(createTableAndSearchPanel(), BorderLayout.CENTER);
 
@@ -50,21 +49,19 @@ public class SanPhamPanel extends JPanel {
     }
 
     private JPanel createFormPanel() {
-        // 1. WRAPPER PANEL: Chứa ScrollPane (Ở giữa) và Panel Nút (Ở dưới cùng)
+        // WRAPPER PANEL: Chứa ScrollPane (Ở giữa) và Panel Nút (Ở dưới cùng)
         JPanel wrapper = new JPanel(new BorderLayout(0, 15));
         wrapper.setBackground(LuxuryTheme.CREAM);
-        // Tăng chiều rộng lên 420px theo yêu cầu
-        wrapper.setPreferredSize(new Dimension(420, 0));
+        wrapper.setPreferredSize(new Dimension(420, 0)); // Giữ nguyên 420px
         wrapper.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Sản Phẩm", 
             javax.swing.border.TitledBorder.LEFT, javax.swing.border.TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
         
-        // 2. FORM PANEL: Nơi chứa toàn bộ các ô nhập liệu sẽ được cuộn
+        // FORM PANEL: Khu vực cuộn
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; 
-        // Tăng thêm 10px Padding (khoảng cách) giữa các dòng cho thoáng
         gbc.insets = new Insets(17, 10, 17, 10); 
         gbc.weightx = 1.0;
 
@@ -94,27 +91,26 @@ public class SanPhamPanel extends JPanel {
         cbNhaCungCap.setBackground(Color.WHITE); cbNhaCungCap.setFont(new Font("Arial", Font.PLAIN, 15));
         gbc.gridy = y++; form.add(cbNhaCungCap, gbc);
 
-        // --- CẬP NHẬT: THIẾT KẾ LẠI KHU VỰC HÌNH ẢNH DỌC (Nút nằm dưới ảnh) ---
         gbc.gridy = y++; form.add(createLabel("Hình Ảnh:"), gbc);
         JPanel pnlAnh = new JPanel();
-        pnlAnh.setLayout(new BoxLayout(pnlAnh, BoxLayout.Y_AXIS)); // Sắp xếp dọc
+        pnlAnh.setLayout(new BoxLayout(pnlAnh, BoxLayout.Y_AXIS)); 
         pnlAnh.setBackground(LuxuryTheme.CREAM);
         
         lblHinhAnh = new JLabel("CHƯA CÓ ẢNH", SwingConstants.CENTER);
-        lblHinhAnh.setPreferredSize(new Dimension(140, 140)); // Tăng size ảnh lên 1 chút cho đẹp
+        lblHinhAnh.setPreferredSize(new Dimension(140, 140)); 
         lblHinhAnh.setMaximumSize(new Dimension(140, 140));
         lblHinhAnh.setBorder(BorderFactory.createDashedBorder(Color.GRAY, 2, 2));
         lblHinhAnh.setForeground(Color.GRAY);
-        lblHinhAnh.setAlignmentX(Component.CENTER_ALIGNMENT); // Căn giữa
+        lblHinhAnh.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         JButton btnChonAnh = LuxuryTheme.createButton("Chọn File Ảnh", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
         btnChonAnh.setPreferredSize(new Dimension(140, 40));
         btnChonAnh.setMaximumSize(new Dimension(140, 40));
-        btnChonAnh.setAlignmentX(Component.CENTER_ALIGNMENT); // Căn giữa
+        btnChonAnh.setAlignmentX(Component.CENTER_ALIGNMENT); 
         btnChonAnh.addActionListener(e -> chonAnhTuMayTinh());
         
         pnlAnh.add(lblHinhAnh);
-        pnlAnh.add(Box.createVerticalStrut(15)); // Tạo khoảng cách 15px giữa Ảnh và Nút
+        pnlAnh.add(Box.createVerticalStrut(15));
         pnlAnh.add(btnChonAnh);
         
         gbc.gridy = y++; form.add(pnlAnh, gbc);
@@ -124,34 +120,33 @@ public class SanPhamPanel extends JPanel {
         lblGiaNhapTB.setForeground(Color.RED);
         gbc.gridy = y++; form.add(lblGiaNhapTB, gbc);
 
-        // Thêm khoảng đệm dưới cùng cho form
         gbc.gridy = y++; form.add(Box.createVerticalStrut(20), gbc);
 
-        // 3. JSCROLLPANE: Bọc cái form lại, thiết lập thanh cuộn Luxury
+        // THANH CUỘN CHO FORM
         JScrollPane scrollPane = new JScrollPane(form);
-        scrollPane.setBorder(null); // Xóa viền của ScrollPane
+        scrollPane.setBorder(null); 
         scrollPane.getViewport().setBackground(LuxuryTheme.CREAM);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Luôn luôn hiện thanh cuộn
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Lăn chuột mượt hơn
-        
-        // Gọi class LuxuryScrollBarUI (Được định nghĩa ở cuối file)
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); 
         scrollPane.getVerticalScrollBar().setUI(new LuxuryScrollBarUI());
 
-        // 4. BUTTON PANEL: (Sẽ được Neo dính chặt ở phía dưới Wrapper)
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        // --- CẬP NHẬT: FIX LỖI NÚT VỚI GRIDLAYOUT 2x2 ---
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10)); // Lưới vuông cân đối
         btnPanel.setBackground(LuxuryTheme.CREAM);
-        btnPanel.setBorder(new EmptyBorder(10, 0, 15, 0)); // Padding cho khu vực nút
+        btnPanel.setBorder(new EmptyBorder(10, 10, 15, 10)); // Căn lề nhẹ 2 bên
 
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE); // Nút Mới
 
         btnAdd.addActionListener(e -> {
             try {
                 SanPham sp = taoSanPhamTuForm();
                 dao.themSanPham(sp);
                 refreshForm();
+                JOptionPane.showMessageDialog(this, "Thêm sản phẩm thành công!");
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); }
         });
 
@@ -160,17 +155,27 @@ public class SanPhamPanel extends JPanel {
                 SanPham sp = taoSanPhamTuForm();
                 dao.capNhatSanPham(sp);
                 refreshForm();
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); }
         });
 
         btnDelete.addActionListener(e -> {
-            dao.xoaSanPham(txtMaSP.getText());
-            refreshForm();
+            int row = table.getSelectedRow();
+            if (row < 0) return;
+            if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Xóa", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                dao.xoaSanPham(txtMaSP.getText());
+                refreshForm();
+            }
         });
 
-        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete);
+        // LOGIC NÚT MỚI
+        btnClear.addActionListener(e -> {
+            refreshForm();
+            table.clearSelection();
+        });
 
-        // LẮP RÁP: ScrollPane ở Giữa, ButtonPanel ở Dưới (Neo cố định)
+        btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
+
         wrapper.add(scrollPane, BorderLayout.CENTER);
         wrapper.add(btnPanel, BorderLayout.SOUTH);
 
@@ -245,6 +250,11 @@ public class SanPhamPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
+        
+        // --- CẬP NHẬT: THÊM COMPONENT PHÂN TRANG VÀO DƯỚI BẢNG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -281,26 +291,34 @@ public class SanPhamPanel extends JPanel {
         lblGiaNhapTB.setText("Giá nhập gốc (TB): 0 đ");
 
         loadNhaCungCapToComboBox();
-        allSanPham = dao.getAllSanPham();
+        
+        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
+        allData = dao.getAllSanPham();
+        phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }
 
     private void updateTableDisplay() {
         tableModel.setRowCount(0);
-        if (allSanPham == null) return;
-        for (SanPham sp : allSanPham) {
+        if (allData == null || allData.isEmpty()) return;
+        
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+        
+        for (int i = start; i < end; i++) {
+            SanPham sp = allData.get(i);
             tableModel.addRow(new Object[]{ sp.getMaSP(), sp.getTenSP(), sp.getLoaiSP(), String.format("%,.0f", sp.getGiaBan()), sp.getSoLuongTon(), sp.getMaNCC() });
         }
     }
 
-  // =====================================================================================
+    // =====================================================================================
     // CLASS CUSTOM SCROLLBAR LUXURY: Đã đổi sang màu VÀNG GOLD
     // =====================================================================================
     private class LuxuryScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
         
         @Override
         protected void configureScrollBarColors() {
-            this.trackColor = LuxuryTheme.CREAM; // Nền thanh cuộn giữ nguyên màu kem
+            this.trackColor = LuxuryTheme.CREAM; 
         }
 
         @Override
@@ -318,19 +336,14 @@ public class SanPhamPanel extends JPanel {
             return button;
         }
 
-        // --- ĐÂY LÀ NƠI CHỈNH MÀU THANH CUỘN (THUMB) ---
         @Override
         protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
             if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) { return; }
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            // CHỈNH TẠI ĐÂY: Sử dụng màu GOLD từ Theme của bạn
-            // (180 là độ đậm nhạt của màu, bạn có thể chỉnh từ 0 - 255)
             Color goldColor = new Color(LuxuryTheme.GOLD.getRed(), LuxuryTheme.GOLD.getGreen(), LuxuryTheme.GOLD.getBlue(), 180);
             g2.setPaint(goldColor); 
-            
-            // Vẽ thanh cuộn bo góc
             g2.fillRoundRect(thumbBounds.x + 3, thumbBounds.y + 2, thumbBounds.width - 6, thumbBounds.height - 4, 10, 10);
             g2.dispose();
         }

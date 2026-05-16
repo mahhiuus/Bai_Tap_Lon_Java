@@ -16,6 +16,10 @@ public class BanBidaPanel extends JPanel {
     private JTable table;
     private BanBidaDAO dao;
 
+    // --- CẬP NHẬT: Thêm biến cho phân trang ---
+    private List<BanBida> allData;
+    private PhanTrangPanel phanTrang;
+
     public BanBidaPanel() {
         dao = new BanBidaDAO();
         setLayout(new BorderLayout(20, 20));
@@ -38,7 +42,7 @@ public class BanBidaPanel extends JPanel {
     private JPanel createFormPanel() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
-        form.setPreferredSize(new Dimension(350, 0));
+        form.setPreferredSize(new Dimension(350, 0)); // GIỮ NGUYÊN UI GỐC
         form.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin bàn",
             TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
@@ -68,12 +72,15 @@ public class BanBidaPanel extends JPanel {
         gbc.gridy = 5; form.add(cbLoaiBan, gbc);
 
         // Khu vực Nút Bấm
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setOpaque(false);
         
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
         JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE);
+        
+        // --- CẬP NHẬT: Thêm nút MỚI cho form Bàn Bida ---
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         btnAdd.addActionListener(e -> {
             try {
@@ -128,9 +135,16 @@ public class BanBidaPanel extends JPanel {
             }
         });
 
+        // LOGIC NÚT MỚI
+        btnClear.addActionListener(e -> {
+            refreshForm();
+            table.clearSelection();
+        });
+
         btnPanel.add(btnAdd);
         btnPanel.add(btnEdit);
         btnPanel.add(btnDelete);
+        btnPanel.add(btnClear);
         
         gbc.gridy = 6;
         gbc.insets = new Insets(30, 10, 10, 10);
@@ -164,6 +178,10 @@ public class BanBidaPanel extends JPanel {
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
         
+        // --- CẬP NHẬT: THÊM COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -175,13 +193,26 @@ public class BanBidaPanel extends JPanel {
     }
 
     private void refreshForm() {
-        tableModel.setRowCount(0);
-        List<BanBida> list = dao.layTatCaBan();
-        for (BanBida b : list) {
-            tableModel.addRow(new Object[]{b.getMaBan(), b.getTenBan(), b.getLoaiBan(), b.getTrangThaiBan()});
-        }
         txtMaBan.setText(dao.sinhMaMoi());
         txtTenBan.setText("");
         cbLoaiBan.setSelectedIndex(0);
+        
+        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
+        allData = dao.layTatCaBan();
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
+
+    private void updateTableDisplay() {
+        tableModel.setRowCount(0);
+        if (allData == null || allData.isEmpty()) return;
+        
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+        
+        for (int i = start; i < end; i++) {
+            BanBida b = allData.get(i);
+            tableModel.addRow(new Object[]{b.getMaBan(), b.getTenBan(), b.getLoaiBan(), b.getTrangThaiBan()});
+        }
     }
 }

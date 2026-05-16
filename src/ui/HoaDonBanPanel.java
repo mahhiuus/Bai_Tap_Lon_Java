@@ -3,9 +3,8 @@ package ui;
 import dao.HoaDonBanDAO;
 import dao.DBConnection;
 import model.HoaDonBan;
-import model.TaiKhoan; // Đã thêm thư viện TaiKhoan
+import model.TaiKhoan; 
 
-// Thư viện in PDF của iText 5
 import com.itextpdf.text.*;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.*;
@@ -28,9 +27,12 @@ public class HoaDonBanPanel extends JPanel {
     private JTable table;
     private HoaDonBanDAO dao;
     private JLabel lblTongDoanhThu;
-    private TaiKhoan currentUser; // Thêm biến lưu quyền tài khoản
+    private TaiKhoan currentUser; 
 
-    // --- CẬP NHẬT CONSTRUCTOR NHẬN TÀI KHOẢN ---
+    // --- CẬP NHẬT: Biến phân trang ---
+    private List<HoaDonBan> allData;
+    private PhanTrangPanel phanTrang;
+
     public HoaDonBanPanel(TaiKhoan user) {
         this.currentUser = user;
         dao = new HoaDonBanDAO();
@@ -47,7 +49,7 @@ public class HoaDonBanPanel extends JPanel {
         pnlHeader.add(lblHeader, BorderLayout.WEST);
 
         JButton btnLamMoi = LuxuryTheme.createButton("Làm Mới Dữ Liệu", LuxuryTheme.TEAL, Color.WHITE);
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { loadData(); table.clearSelection(); });
         pnlHeader.add(btnLamMoi, BorderLayout.EAST);
 
         add(pnlHeader, BorderLayout.NORTH);
@@ -55,7 +57,7 @@ public class HoaDonBanPanel extends JPanel {
         // BẢNG DỮ LIỆU
         add(createTablePanel(), BorderLayout.CENTER);
 
-        // BOTTOM (Nút Xóa, Nút In PDF & Doanh thu)
+        // BOTTOM
         add(createBottomPanel(), BorderLayout.SOUTH);
 
         loadData();
@@ -78,6 +80,11 @@ public class HoaDonBanPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
         panel.add(scroll, BorderLayout.CENTER);
+
+        // --- CẬP NHẬT: THÊM COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+
         return panel;
     }
 
@@ -91,21 +98,25 @@ public class HoaDonBanPanel extends JPanel {
 
         JButton btnDelete = LuxuryTheme.createButton("Xóa Hóa Đơn", new Color(192, 57, 43), Color.WHITE);
         
-        // --- LOGIC PHÂN QUYỀN ẨN NÚT XÓA ---
         if (currentUser != null && !currentUser.getVaiTro().equals("ADMIN")) {
-            btnDelete.setVisible(false); // Nếu là nhân viên thì ẩn nút Xóa đi
+            btnDelete.setVisible(false); 
         }
         btnDelete.addActionListener(e -> xoaHoaDon());
 
         JButton btnInPDF = LuxuryTheme.createButton("IN LẠI HÓA ĐƠN PDF", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
         btnInPDF.addActionListener(e -> inLaiHoaDonPDF());
 
+        // --- CẬP NHẬT: NÚT MỚI (Bỏ chọn bảng) ---
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
+        btnClear.addActionListener(e -> { loadData(); table.clearSelection(); });
+
         btnPanel.add(btnDelete);
         btnPanel.add(btnInPDF);
+        btnPanel.add(btnClear);
 
         panel.add(btnPanel, BorderLayout.WEST);
 
-        lblTongDoanhThu = new JLabel("Tổng doanh thu: 0 VNĐ");
+        lblTongDoanhThu = new JLabel("Tổng (Trang 1): 0 VNĐ");
         lblTongDoanhThu.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
         lblTongDoanhThu.setForeground(Color.RED);
         panel.add(lblTongDoanhThu, BorderLayout.EAST);
@@ -113,29 +124,38 @@ public class HoaDonBanPanel extends JPanel {
         return panel;
     }
 
+    // --- CẬP NHẬT: LOGIC PHÂN TRANG ---
     private void loadData() {
-        tableModel.setRowCount(0);
-        double tongDoanhThu = 0;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        allData = dao.getAllHoaDonBan(); 
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
 
-        List<HoaDonBan> list = dao.getAllHoaDonBan(); 
-        for (HoaDonBan hdb : list) {
+    private void updateTableDisplay() {
+        tableModel.setRowCount(0);
+        double tongDoanhThuTrang = 0;
+
+        if (allData == null || allData.isEmpty()) {
+            lblTongDoanhThu.setText("Tổng (Trang 1): 0 VNĐ");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+
+        for (int i = start; i < end; i++) {
+            HoaDonBan hdb = allData.get(i);
             String ngayBanStr = hdb.getNgayBan() != null ? hdb.getNgayBan().format(formatter) : "";
             
             tableModel.addRow(new Object[]{
-                hdb.getMaHDB(),
-                hdb.getMaPhien(),
-                hdb.getMaKH(),
-                hdb.getMaNV(),
-                ngayBanStr,
-                String.format("%,.0f", hdb.getTienBida()),
-                String.format("%,.0f", hdb.getTienSanPham()),
-                String.format("%,.0f", hdb.getTongTien())
+                hdb.getMaHDB(), hdb.getMaPhien(), hdb.getMaKH(), hdb.getMaNV(), ngayBanStr,
+                String.format("%,.0f", hdb.getTienBida()), String.format("%,.0f", hdb.getTienSanPham()), String.format("%,.0f", hdb.getTongTien())
             });
-            tongDoanhThu += hdb.getTongTien();
+            tongDoanhThuTrang += hdb.getTongTien();
         }
 
-        lblTongDoanhThu.setText("Tổng doanh thu: " + String.format("%,.0f VNĐ", tongDoanhThu));
+        lblTongDoanhThu.setText("Tổng (Trang " + phanTrang.getCurrentPage() + "): " + String.format("%,.0f VNĐ", tongDoanhThuTrang));
     }
 
     private void xoaHoaDon() {
@@ -162,14 +182,11 @@ public class HoaDonBanPanel extends JPanel {
     }
 
     // =========================================================================
-    // HÀM IN LẠI HÓA ĐƠN BÁN (Quét lấy chi tiết sản phẩm từ CSDL để xuất PDF)
+    // HÀM IN LẠI HÓA ĐƠN BÁN (GIỮ NGUYÊN)
     // =========================================================================
     private void inLaiHoaDonPDF() {
         int row = table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một Hóa Đơn trong bảng để in!");
-            return;
-        }
+        if (row < 0) { JOptionPane.showMessageDialog(this, "Vui lòng chọn một Hóa Đơn trong bảng để in!"); return; }
 
         String maHDB = table.getValueAt(row, 0).toString();
         String maKH = table.getValueAt(row, 2).toString();
@@ -184,10 +201,7 @@ public class HoaDonBanPanel extends JPanel {
         
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            if (!file.getName().toLowerCase().endsWith(".pdf")) {
-                file = new File(file.getParentFile(), file.getName() + ".pdf");
-            }
-
+            if (!file.getName().toLowerCase().endsWith(".pdf")) file = new File(file.getParentFile(), file.getName() + ".pdf");
             try {
                 Document document = new Document(PageSize.A5);
                 PdfWriter.getInstance(document, new FileOutputStream(file));
@@ -198,71 +212,45 @@ public class HoaDonBanPanel extends JPanel {
                 Font fontInfo = new Font(bf, 11, Font.NORMAL);
                 Font fontNormal = new Font(bf, 12, Font.NORMAL);
 
-                // --- DATA FAKE QUÁN ---
                 Paragraph brand = new Paragraph("BILLIARDS CLUB CENTER - LUXURY EDITION", fontTitle);
                 brand.setAlignment(Element.ALIGN_CENTER); document.add(brand);
-                
                 Paragraph address = new Paragraph("Đ/c: 123 Đường Cầu Giấy, Q. Cầu Giấy, Hà Nội", fontInfo);
                 address.setAlignment(Element.ALIGN_CENTER); document.add(address);
-                
                 Paragraph phone = new Paragraph("Hotline: 0988.888.888", fontInfo);
                 phone.setAlignment(Element.ALIGN_CENTER); document.add(phone);
                 document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
 
-                // --- THÔNG TIN HÓA ĐƠN ---
                 document.add(new Paragraph("HÓA ĐƠN BÁN HÀNG (BẢN SAO)", new Font(bf, 14, Font.BOLD)));
                 document.add(new Paragraph("Mã Hóa Đơn: " + maHDB, fontNormal));
                 document.add(new Paragraph("Khách hàng: " + maKH, fontNormal));
                 document.add(new Paragraph("Nhân viên: " + maNV, fontNormal));
                 document.add(new Paragraph("Ngày in: " + ngayBan, fontNormal));
                 document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
-                
                 document.add(new Paragraph("Tiền Bida: " + tienBidaStr + " đ", fontNormal));
                 document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
-
-                // --- BẢNG CHI TIẾT SẢN PHẨM DỊCH VỤ ---
                 document.add(new Paragraph("Chi tiết gọi đồ:", fontNormal));
                 document.add(new Paragraph(" "));
                 PdfPTable pdfTable = new PdfPTable(3); 
-                pdfTable.setWidthPercentage(100);
-                pdfTable.setWidths(new float[]{4f, 1f, 3f});
-                pdfTable.addCell(new Phrase("Tên món", fontNormal));
-                pdfTable.addCell(new Phrase("SL", fontNormal));
-                pdfTable.addCell(new Phrase("Thành tiền", fontNormal));
+                pdfTable.setWidthPercentage(100); pdfTable.setWidths(new float[]{4f, 1f, 3f});
+                pdfTable.addCell(new Phrase("Tên món", fontNormal)); pdfTable.addCell(new Phrase("SL", fontNormal)); pdfTable.addCell(new Phrase("Thành tiền", fontNormal));
 
-                // SQL lấy chi tiết từ CSDL
                 String sql = "SELECT c.so_luong, c.don_gia_ban, s.ten_sp FROM chi_tiet_hoa_don_ban c JOIN san_pham s ON c.ma_sp = s.ma_sp WHERE c.ma_hdb = ?";
-                try (Connection conn = DBConnection.getConnection(); 
-                     PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, maHDB);
-                    ResultSet rs = ps.executeQuery();
+                try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, maHDB); ResultSet rs = ps.executeQuery();
                     while(rs.next()) {
-                        String tenSP = rs.getString("ten_sp");
-                        int sl = rs.getInt("so_luong");
-                        double gia = rs.getDouble("don_gia_ban");
-                        pdfTable.addCell(new Phrase(tenSP, fontNormal));
-                        pdfTable.addCell(new Phrase(String.valueOf(sl), fontNormal));
-                        pdfTable.addCell(new Phrase(String.format("%,.0f", sl * gia), fontNormal));
+                        pdfTable.addCell(new Phrase(rs.getString("ten_sp"), fontNormal));
+                        pdfTable.addCell(new Phrase(String.valueOf(rs.getInt("so_luong")), fontNormal));
+                        pdfTable.addCell(new Phrase(String.format("%,.0f", rs.getInt("so_luong") * rs.getDouble("don_gia_ban")), fontNormal));
                     }
                 }
-
-                document.add(pdfTable);
-                document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
-                
+                document.add(pdfTable); document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
                 Paragraph tong = new Paragraph("TỔNG THANH TOÁN: " + tongTienStr + " VNĐ", new Font(bf, 14, Font.BOLD, BaseColor.RED));
-                tong.setAlignment(Element.ALIGN_RIGHT); 
-                document.add(tong);
-                
+                tong.setAlignment(Element.ALIGN_RIGHT); document.add(tong);
                 Paragraph thanks = new Paragraph("\nXin cảm ơn quý khách và hẹn gặp lại!", fontInfo);
-                thanks.setAlignment(Element.ALIGN_CENTER); 
-                document.add(thanks);
+                thanks.setAlignment(Element.ALIGN_CENTER); document.add(thanks);
 
-                document.close();
-                Desktop.getDesktop().open(file); // Tự động mở file
-                
-            } catch (Exception e) { 
-                JOptionPane.showMessageDialog(this, "Lỗi in PDF: " + e.getMessage()); 
-            }
+                document.close(); Desktop.getDesktop().open(file); 
+            } catch (Exception e) { JOptionPane.showMessageDialog(this, "Lỗi in PDF: " + e.getMessage()); }
         }
     }
 }

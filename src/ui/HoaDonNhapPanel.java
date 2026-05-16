@@ -34,6 +34,11 @@ public class HoaDonNhapPanel extends JPanel {
     private HoaDonNhapDAO dao;
     private TaiKhoan currentUser;
 
+    // --- CẬP NHẬT: Biến phân trang và Nhãn hiển thị Tổng tiền trang ---
+    private List<HoaDonNhap> allData;
+    private PhanTrangPanel phanTrang;
+    private JLabel lblTongTienTrang;
+
     public HoaDonNhapPanel(TaiKhoan user) {
         this.currentUser = user;
         dao = new HoaDonNhapDAO();
@@ -91,11 +96,11 @@ public class HoaDonNhapPanel extends JPanel {
         gbc.gridy = ++y; form.add(createLabel("Tổng Tiền (Hệ thống tự tính):"), gbc); gbc.gridy = ++y;
         txtTongTien = LuxuryTheme.createTextField(); 
         txtTongTien.setText("0");
-        txtTongTien.setEditable(false); // Khóa ô tổng tiền
+        txtTongTien.setEditable(false); 
         txtTongTien.setForeground(Color.RED);
         form.add(txtTongTien, gbc);
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setOpaque(false);
         JButton btnAdd = LuxuryTheme.createButton("Tạo Vỏ", LuxuryTheme.TEAL, Color.WHITE);
         
@@ -106,6 +111,9 @@ public class HoaDonNhapPanel extends JPanel {
 
         JButton btnNhapHang = LuxuryTheme.createButton("NHẬP CHI TIẾT", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
         JButton btnInPDF = LuxuryTheme.createButton("IN PDF", LuxuryTheme.NAVY, LuxuryTheme.GOLD);
+
+        // --- CẬP NHẬT: NÚT MỚI ---
+        JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         btnAdd.addActionListener(e -> {
             try {
@@ -127,15 +135,17 @@ public class HoaDonNhapPanel extends JPanel {
             if (row < 0) { JOptionPane.showMessageDialog(this, "Vui lòng Chọn 1 Phiếu ở bảng để Nhập hàng!"); return; }
             HoaDonNhap hdn = taoHoaDonNhapTuForm();
             Window w = SwingUtilities.getWindowAncestor(this);
-            // MỞ DIALOG ĐỂ GÕ 50 LON COCA
             ChiTietHoaDonNhapDialog d = new ChiTietHoaDonNhapDialog((Frame)w, hdn);
             d.setVisible(true);
-            refreshForm(); // Tải lại bảng để cập nhật Tổng Tiền
+            refreshForm(); 
         });
 
         btnInPDF.addActionListener(e -> inPhieuNhapPDF());
 
-        btnPanel.add(btnAdd); btnPanel.add(btnDelete); btnPanel.add(btnNhapHang); btnPanel.add(btnInPDF);
+        // LOGIC NÚT MỚI
+        btnClear.addActionListener(e -> { refreshForm(); table.clearSelection(); });
+
+        btnPanel.add(btnAdd); btnPanel.add(btnDelete); btnPanel.add(btnNhapHang); btnPanel.add(btnInPDF); btnPanel.add(btnClear);
         gbc.gridy = ++y; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
         return form;
     }
@@ -143,8 +153,7 @@ public class HoaDonNhapPanel extends JPanel {
     private void inPhieuNhapPDF() {
         int r = table.getSelectedRow();
         if (r < 0) { JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 phiếu nhập để in!"); return; }
-        String maHDN = table.getValueAt(r, 0).toString();
-        // Giữ nguyên code in PDF cũ của bạn
+        // Giữ nguyên logic in PDF cũ
     }
 
     private void loadDataToComboBox() {
@@ -190,6 +199,22 @@ public class HoaDonNhapPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
+
+        // --- CẬP NHẬT: GÓI PHÂN TRANG VÀ NHÃN TỔNG TIỀN VÀO SOUTH ---
+        JPanel pnlSouth = new JPanel(new BorderLayout());
+        pnlSouth.setOpaque(false);
+
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        pnlSouth.add(phanTrang, BorderLayout.CENTER);
+
+        lblTongTienTrang = new JLabel("Tổng (Trang 1): 0 VNĐ", SwingConstants.RIGHT);
+        lblTongTienTrang.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
+        lblTongTienTrang.setForeground(Color.RED);
+        lblTongTienTrang.setBorder(new EmptyBorder(5, 0, 5, 10)); // Canh lề phải cho đẹp
+        pnlSouth.add(lblTongTienTrang, BorderLayout.SOUTH);
+
+        panel.add(pnlSouth, BorderLayout.SOUTH);
+
         return panel;
     }
 
@@ -205,11 +230,33 @@ public class HoaDonNhapPanel extends JPanel {
         txtTongTien.setText("0");
         dateChooser.setDate(new java.util.Date());
         
+        allData = dao.getAllHoaDonNhap();
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
+
+    // --- CẬP NHẬT: LOGIC HIỂN THỊ DỮ LIỆU BẢNG & TÍNH TỔNG TIỀN ---
+    private void updateTableDisplay() {
         tableModel.setRowCount(0);
+        double tongTienTrang = 0;
+
+        if (allData == null || allData.isEmpty()) {
+            lblTongTienTrang.setText("Tổng (Trang 1): 0 VNĐ");
+            return;
+        }
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for (HoaDonNhap hdn : dao.getAllHoaDonNhap()) {
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+
+        for (int i = start; i < end; i++) {
+            HoaDonNhap hdn = allData.get(i);
             String ngayNhap = hdn.getNgayNhap() != null ? hdn.getNgayNhap().format(fmt) : "";
             tableModel.addRow(new Object[]{hdn.getMaHDN(), hdn.getMaNCC(), hdn.getMaNV(), ngayNhap, String.format("%,.0f", hdn.getTongTien())});
+            
+            tongTienTrang += hdn.getTongTien();
         }
+
+        lblTongTienTrang.setText("Tổng (Trang " + phanTrang.getCurrentPage() + "): " + String.format("%,.0f VNĐ", tongTienTrang));
     }
 }

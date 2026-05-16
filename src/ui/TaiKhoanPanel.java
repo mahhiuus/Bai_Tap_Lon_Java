@@ -19,6 +19,10 @@ public class TaiKhoanPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private TaiKhoanDAO dao = new TaiKhoanDAO();
+    
+    // --- CẬP NHẬT: Thêm biến cho phân trang ---
+    private List<TaiKhoan> allData;
+    private PhanTrangPanel phanTrang;
 
     public TaiKhoanPanel() {
         setLayout(new BorderLayout(20, 20));
@@ -38,7 +42,7 @@ public class TaiKhoanPanel extends JPanel {
     private JPanel createFormPanel() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(LuxuryTheme.CREAM);
-        form.setPreferredSize(new Dimension(380, 0));
+        form.setPreferredSize(new Dimension(380, 0)); // GIỮ NGUYÊN UI GỐC
         form.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Thông tin Tài khoản"));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -84,7 +88,11 @@ public class TaiKhoanPanel extends JPanel {
             }
         });
 
-        btnClear.addActionListener(e -> refreshForm());
+        // --- CẬP NHẬT: LOGIC NÚT MỚI ---
+        btnClear.addActionListener(e -> {
+            refreshForm();
+            table.clearSelection();
+        });
 
         btnPanel.add(btnAdd); btnPanel.add(btnEdit); btnPanel.add(btnDelete); btnPanel.add(btnClear);
         gbc.gridy = y++; gbc.insets = new Insets(20, 10, 10, 10); form.add(btnPanel, gbc);
@@ -112,6 +120,11 @@ public class TaiKhoanPanel extends JPanel {
             }
         });
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        
+        // --- CẬP NHẬT: THÊM COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -130,8 +143,21 @@ public class TaiKhoanPanel extends JPanel {
         cbNhanVien.addItem("--- Trống (Không có NV) ---");
         for(NhanVien nv : new NhanVienDAO().layTatCaNhanVien()) cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV());
         
+        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
+        allData = dao.getAllTaiKhoan();
+        phanTrang.setTotalItems(allData.size());
+        updateTableDisplay();
+    }
+
+    private void updateTableDisplay() {
         tableModel.setRowCount(0);
-        for (TaiKhoan tk : dao.getAllTaiKhoan()) {
+        if (allData == null || allData.isEmpty()) return;
+        
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
+        
+        for (int i = start; i < end; i++) {
+            TaiKhoan tk = allData.get(i);
             tableModel.addRow(new Object[]{tk.getMaTK(), tk.getTenDangNhap(), tk.getMatKhau(), tk.getVaiTro(), tk.getMaNV()});
         }
     }

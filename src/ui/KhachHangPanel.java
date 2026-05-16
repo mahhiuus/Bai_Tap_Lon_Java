@@ -19,9 +19,7 @@ public class KhachHangPanel extends JPanel {
     
     // Biến cho phân trang
     private List<KhachHang> allKhachHang;
-    private int currentPage = 1;
-    private final int ITEMS_PER_PAGE = 10;
-    private JLabel lblPageInfo;
+    private PhanTrangPanel phanTrang; // SỬ DỤNG COMPONENT PHÂN TRANG MỚI
 
     public KhachHangPanel() {
         dao = new KhachHangDAO();
@@ -73,12 +71,13 @@ public class KhachHangPanel extends JPanel {
         txtSdt = LuxuryTheme.createTextField();
         gbc.gridy = 5; form.add(txtSdt, gbc);
 
-        // Khung Nút Bấm
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // --- CẬP NHẬT: Khung Nút Bấm đổi sang GridLayout 2x2 để chứa 4 nút không bị che ---
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setBackground(LuxuryTheme.CREAM);
         
         JButton btnAdd = LuxuryTheme.createButton("Thêm", LuxuryTheme.TEAL, Color.WHITE);
         JButton btnEdit = LuxuryTheme.createButton("Sửa", LuxuryTheme.NAVY, Color.WHITE);
+        JButton btnDelete = LuxuryTheme.createButton("Xóa", new Color(192, 57, 43), Color.WHITE); // --- THÊM NÚT XÓA ---
         JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         // Sự kiện Thêm
@@ -104,11 +103,32 @@ public class KhachHangPanel extends JPanel {
             }
         });
 
-        // Sự kiện Làm Mới form (Bỏ chọn bảng, sinh mã mới)
-        btnClear.addActionListener(e -> refreshForm());
+        // Sự kiện Xóa
+        btnDelete.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row < 0) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng để xóa!");
+                return;
+            }
+            if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Xóa", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                try {
+                    dao.xoaKhachHang(txtMaKH.getText());
+                    refreshForm();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+                }
+            }
+        });
+
+        // CẬP NHẬT SỰ KIỆN NÚT MỚI: Làm mới dữ liệu và bỏ chọn bảng
+        btnClear.addActionListener(e -> {
+            refreshForm();
+            table.clearSelection();
+        });
 
         btnPanel.add(btnAdd);
         btnPanel.add(btnEdit);
+        btnPanel.add(btnDelete); // Đưa nút xóa vào giao diện
         btnPanel.add(btnClear);
 
         gbc.gridy = 6;
@@ -146,27 +166,10 @@ public class KhachHangPanel extends JPanel {
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         panel.add(scroll, BorderLayout.CENTER);
 
-        // --- THANH PHÂN TRANG ---
-        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        paginationPanel.setBackground(LuxuryTheme.CREAM);
+        // --- CẬP NHẬT: GỌI COMPONENT PHÂN TRANG ---
+        phanTrang = new PhanTrangPanel(this::updateTableDisplay);
+        panel.add(phanTrang, BorderLayout.SOUTH);
 
-        JButton btnPrev = LuxuryTheme.createButton("< Trước", LuxuryTheme.NAVY, Color.WHITE);
-        JButton btnNext = LuxuryTheme.createButton("Sau >", LuxuryTheme.NAVY, Color.WHITE);
-        lblPageInfo = new JLabel("Trang 1 / 1");
-        lblPageInfo.setFont(new Font("Arial", Font.BOLD, 14));
-        lblPageInfo.setForeground(LuxuryTheme.NAVY);
-
-        btnPrev.addActionListener(e -> { if (currentPage > 1) { currentPage--; updateTableDisplay(); } });
-        btnNext.addActionListener(e -> { 
-            int maxPage = (int) Math.ceil((double)allKhachHang.size() / ITEMS_PER_PAGE);
-            if (currentPage < maxPage) { currentPage++; updateTableDisplay(); } 
-        });
-
-        paginationPanel.add(btnPrev);
-        paginationPanel.add(lblPageInfo);
-        paginationPanel.add(btnNext);
-
-        panel.add(paginationPanel, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -185,25 +188,21 @@ public class KhachHangPanel extends JPanel {
         loadDataToTable(); // Cập nhật lại bảng
     }
 
-    // --- LOGIC DATA & PHÂN TRANG ---
+    // --- LOGIC DATA & PHÂN TRANG MỚI ---
     private void loadDataToTable() {
         allKhachHang = dao.getAllKhachHang();
-        currentPage = 1; 
+        phanTrang.setTotalItems(allKhachHang.size());
         updateTableDisplay();
     }
 
     private void updateTableDisplay() {
         tableModel.setRowCount(0); 
         if (allKhachHang == null || allKhachHang.isEmpty()) {
-            lblPageInfo.setText("Trang 1 / 1");
             return;
         }
 
-        int maxPage = (int) Math.ceil((double) allKhachHang.size() / ITEMS_PER_PAGE);
-        lblPageInfo.setText("Trang " + currentPage + " / " + maxPage);
-
-        int start = (currentPage - 1) * ITEMS_PER_PAGE;
-        int end = Math.min(start + ITEMS_PER_PAGE, allKhachHang.size());
+        int start = phanTrang.getStartIndex();
+        int end = phanTrang.getEndIndex();
 
         for (int i = start; i < end; i++) {
             KhachHang kh = allKhachHang.get(i);
