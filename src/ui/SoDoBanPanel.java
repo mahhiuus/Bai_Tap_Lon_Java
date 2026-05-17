@@ -11,8 +11,6 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SoDoBanPanel extends JPanel {
     private BanBidaDAO banDao = new BanBidaDAO();
@@ -61,33 +59,118 @@ public class SoDoBanPanel extends JPanel {
 
         setLayout(new BorderLayout(10, 10));
         setBackground(LuxuryTheme.CREAM);
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        setBorder(new EmptyBorder(25, 30, 25, 30)); 
 
         JPanel mainGrid = new JPanel();
         mainGrid.setLayout(new BoxLayout(mainGrid, BoxLayout.Y_AXIS));
         mainGrid.setOpaque(false);
+        mainGrid.setBorder(new EmptyBorder(0, 0, 0, 25));
 
-        pnlNormal = new JPanel(new GridLayout(0, 4, 20, 20));
-        pnlNormal.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(LuxuryTheme.NAVY, 2), " KHU VỰC BÀN THƯỜNG (50.000đ/h) ", 
-            TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.NAVY));
+        // =========================================================================
+        // KHU VỰC BÀN THƯỜNG
+        // =========================================================================
+        JPanel sectionNormal = new JPanel(new BorderLayout());
+        sectionNormal.setOpaque(false);
+
+        JPanel headerNormal = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(LuxuryTheme.NAVY);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2.dispose();
+            }
+        };
+        headerNormal.setPreferredSize(new Dimension(0, 45));
+        headerNormal.setOpaque(false);
+        
+        // --- TÁCH EMOJI VÀ TEXT RA 2 ELEMENT RIÊNG BIỆT ---
+        JPanel pnlTitleNormal = new JPanel(new BorderLayout(10, 0));
+        pnlTitleNormal.setOpaque(false);
+        pnlTitleNormal.setBorder(new EmptyBorder(0, 20, 0, 0));
+        
+        JLabel lblNormalIcon = new JLabel("🎱");
+        lblNormalIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18)); // Font chuyên trị Emoji
+        lblNormalIcon.setForeground(Color.WHITE);
+        
+        JLabel lblNormalText = new JLabel("KHU VỰC BÀN THƯỜNG (50.000đ/h)");
+        lblNormalText.setFont(new Font("Arial", Font.BOLD, 15)); // Font chuẩn cho Text
+        lblNormalText.setForeground(Color.WHITE);
+        
+        pnlTitleNormal.add(lblNormalIcon, BorderLayout.WEST);
+        pnlTitleNormal.add(lblNormalText, BorderLayout.CENTER);
+        
+        headerNormal.add(pnlTitleNormal, BorderLayout.CENTER);
+        sectionNormal.add(headerNormal, BorderLayout.NORTH);
+
+        pnlNormal = new JPanel(new GridLayout(0, 4, 20, 25));
         pnlNormal.setOpaque(false);
+        pnlNormal.setBorder(new EmptyBorder(20, 10, 20, 10)); 
+        sectionNormal.add(pnlNormal, BorderLayout.CENTER);
 
-        pnlVip = new JPanel(new GridLayout(0, 4, 20, 20));
-        pnlVip.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(LuxuryTheme.GOLD, 2), " KHU VỰC BÀN VIP (80.000đ/h) ", 
-            TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), LuxuryTheme.GOLD));
+
+        // =========================================================================
+        // KHU VỰC BÀN VIP
+        // =========================================================================
+        JPanel sectionVip = new JPanel(new BorderLayout());
+        sectionVip.setOpaque(false);
+
+        JPanel headerVip = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(LuxuryTheme.GOLD);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2.dispose();
+            }
+        };
+        headerVip.setPreferredSize(new Dimension(0, 45));
+        headerVip.setOpaque(false);
+        
+        // --- TÁCH EMOJI VÀ TEXT RA 2 ELEMENT RIÊNG BIỆT ---
+        JPanel pnlTitleVip = new JPanel(new BorderLayout(10, 0));
+        pnlTitleVip.setOpaque(false);
+        pnlTitleVip.setBorder(new EmptyBorder(0, 20, 0, 0));
+        
+        JLabel lblVipIcon = new JLabel("⭐");
+        lblVipIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+        lblVipIcon.setForeground(LuxuryTheme.NAVY);
+        
+        JLabel lblVipText = new JLabel("KHU VỰC BÀN VIP (80.000đ/h)");
+        lblVipText.setFont(new Font("Arial", Font.BOLD, 15));
+        lblVipText.setForeground(LuxuryTheme.NAVY);
+        
+        pnlTitleVip.add(lblVipIcon, BorderLayout.WEST);
+        pnlTitleVip.add(lblVipText, BorderLayout.CENTER);
+        
+        headerVip.add(pnlTitleVip, BorderLayout.CENTER);
+        sectionVip.add(headerVip, BorderLayout.NORTH);
+
+        pnlVip = new JPanel(new GridLayout(0, 4, 20, 25));
         pnlVip.setOpaque(false);
+        pnlVip.setBorder(new EmptyBorder(20, 10, 20, 10));
+        sectionVip.add(pnlVip, BorderLayout.CENTER);
 
-        mainGrid.add(pnlNormal);
-        mainGrid.add(Box.createVerticalStrut(30));
-        mainGrid.add(pnlVip);
 
+        mainGrid.add(sectionNormal);
+        mainGrid.add(Box.createVerticalStrut(35)); 
+        mainGrid.add(sectionVip);
+
+        // =========================================================================
+        // CẤU HÌNH THANH CUỘN
+        // =========================================================================
         JScrollPane scrollPane = new JScrollPane(mainGrid);
         scrollPane.setBorder(null);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        
+        scrollPane.getVerticalScrollBar().setUI(new InvisibleModernScrollBarUI());
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
+
         add(scrollPane, BorderLayout.CENTER);
         
         refreshMap();
@@ -108,12 +191,19 @@ public class SoDoBanPanel extends JPanel {
     private JButton createTableButton(BanBida ban) {
         boolean isPlaying = ban.getTrangThaiBan().equals("DANG_CHOI");
         String statusText = isPlaying ? "Đang chơi" : "Trống";
-        String statusColor = isPlaying ? "#117E8D" : "#888888"; 
+        
+        String statusColor = isPlaying ? "#117E8D" : "#7F8C8D"; 
+        String nameColor = isPlaying ? "#1A3263" : "#D68910";   
 
-        String htmlNormal = "<html><center><b style='font-size:16px; color:#FAB95B;'>" + ban.getTenBan() + 
-                          "</b><br><span style='font-size:12px; color:" + statusColor + ";'>" + statusText + "</span></center></html>";
-        String htmlHover = "<html><center><b style='font-size:16px; color:#D68910;'>" + ban.getTenBan() + 
-                          "</b><br><span style='font-size:12px; color:" + statusColor + ";'>" + statusText + "</span></center></html>";
+        String htmlNormal = "<html><center><div style='font-family:sans-serif; margin-top:6px;'>"
+                          + "<b style='font-size:15px; color:" + nameColor + ";'>" + ban.getTenBan() + "</b><br>"
+                          + "<span style='font-size:12px; font-weight:600; color:" + statusColor + ";'>" + statusText + "</span>"
+                          + "</div></center></html>";
+                          
+        String htmlHover = "<html><center><div style='font-family:sans-serif; margin-top:6px;'>"
+                          + "<b style='font-size:15px; color:#2980B9;'>" + ban.getTenBan() + "</b><br>"
+                          + "<span style='font-size:12px; font-weight:600; color:" + statusColor + ";'>" + statusText + "</span>"
+                          + "</div></center></html>";
 
         JButton btn = new JButton(htmlNormal);
         btn.setIcon(isPlaying ? iconActive : iconTrong);
@@ -142,7 +232,6 @@ public class SoDoBanPanel extends JPanel {
         int confirm = JOptionPane.showConfirmDialog(this, "Bắt đầu tính giờ cho " + ban.getTenBan() + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // 1. Lưu phiên mới vào DB
                 PhienChoi pc = new PhienChoi();
                 pc.setMaPhien(phienDao.sinhMaMoi());
                 pc.setMaBan(ban.getMaBan());
@@ -150,7 +239,6 @@ public class SoDoBanPanel extends JPanel {
                 pc.setTrangThaiPhien("DANG_CHOI");
                 phienDao.themPhien(pc);
 
-                // 2. Cập nhật trạng thái bàn
                 banDao.capNhatTrangThai(ban.getMaBan(), "DANG_CHOI");
                 refreshMap(); 
             } catch (Exception ex) {
@@ -161,21 +249,17 @@ public class SoDoBanPanel extends JPanel {
 
     private void stopTable(BanBida ban) {
         try {
-            // 1. Tìm phiên đang chơi dưới DB
             PhienChoi pc = phienDao.timPhienDangChoiTheoBan(ban.getMaBan());
             
             if (pc != null) {
-                // 2. Mở form thanh toán
                 ThanhToanDialog dialog = new ThanhToanDialog(null, ban, pc);
                 dialog.setVisible(true);
                 
-                // 3. Nếu thanh toán xong thì mới tắt đèn bàn
                 if (dialog.isPaid()) {
                     banDao.capNhatTrangThai(ban.getMaBan(), "TRONG");
                     refreshMap(); 
                 }
             } else {
-                // XỬ LÝ LỖI DỮ LIỆU RÁC (Bàn đang sáng đèn nhưng không có dữ liệu giờ chơi)
                 int fix = JOptionPane.showConfirmDialog(this, 
                     "Bàn này đang bị kẹt ở trạng thái 'Đang chơi' nhưng không tìm thấy dữ liệu tính giờ trong Database!\n\n" +
                     "Bạn có muốn ép buộc đặt lại bàn này thành 'Trống' để sử dụng lại không?", 
@@ -188,6 +272,44 @@ public class SoDoBanPanel extends JPanel {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private class InvisibleModernScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        @Override
+        protected void configureScrollBarColors() {
+            this.trackColor = new Color(0, 0, 0, 0); 
+        }
+
+        @Override protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+        @Override protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+
+        private JButton createZeroButton() {
+            JButton button = new JButton();
+            Dimension zeroDim = new Dimension(0, 0);
+            button.setPreferredSize(zeroDim);
+            button.setMinimumSize(zeroDim);
+            button.setMaximumSize(zeroDim);
+            return button;
+        }
+
+        @Override
+        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+        }
+
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) return;
+            
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            boolean isHovered = isThumbRollover();
+            Color thumbColor = isHovered ? new Color(0, 0, 0, 50) : new Color(0, 0, 0, 18);
+            
+            g2.setPaint(thumbColor);
+            g2.fillRoundRect(thumbBounds.x + 1, thumbBounds.y, thumbBounds.width - 2, thumbBounds.height, 8, 8);
+            g2.dispose();
         }
     }
 }

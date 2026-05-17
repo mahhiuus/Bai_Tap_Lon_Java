@@ -8,7 +8,7 @@ import java.awt.event.*;
 public class LuxuryTheme {
     // 1. BẢNG MÀU CHỦ ĐẠO
     public static final Color NAVY = new Color(26, 50, 99);     // #1A3263
-    public static final Color CREAM = new Color(232, 226, 219);   // #E8E2DB
+    public static final Color CREAM = new Color(248, 248, 248);   // #f8f8f8
     public static final Color GOLD = new Color(250, 185, 91);     // #FAB95B
     public static final Color TEAL = new Color(17, 126, 141);     // #117E8D
     
