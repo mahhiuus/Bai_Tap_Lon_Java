@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class TaiKhoanPanel extends JPanel {
-    private JTextField txtMaTK, txtUsername, txtPassword;
+    private JTextField txtMaTK, txtUsername, txtPassword, txtSearch;
     private JComboBox<String> cbVaiTro, cbNhanVien;
     private DefaultTableModel tableModel;
     private JTable table;
@@ -100,7 +100,19 @@ public class TaiKhoanPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout()); panel.setOpaque(false);
+        JPanel panel = new JPanel(new BorderLayout(0, 10)); panel.setOpaque(false);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã/Username/Mã NV): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
+
         tableModel = new DefaultTableModel(new String[]{"Mã TK", "Username", "Password", "Vai Trò", "Mã NV"}, 0);
         table = new JTable(tableModel); table.setRowHeight(35);
         table.getTableHeader().setBackground(LuxuryTheme.NAVY); table.getTableHeader().setForeground(LuxuryTheme.GOLD);
@@ -139,12 +151,16 @@ public class TaiKhoanPanel extends JPanel {
 
     private void refreshForm() {
         txtMaTK.setText(dao.sinhMaMoi()); txtUsername.setText(""); txtPassword.setText("");
+        if (txtSearch != null) txtSearch.setText("");
         cbNhanVien.removeAllItems();
         cbNhanVien.addItem("--- Trống (Không có NV) ---");
         for(NhanVien nv : new NhanVienDAO().layTatCaNhanVien()) cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV());
         
-        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
-        allData = dao.getAllTaiKhoan();
+        loadData(dao.getAllTaiKhoan());
+    }
+
+    private void loadData(List<TaiKhoan> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }

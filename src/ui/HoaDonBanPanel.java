@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class HoaDonBanPanel extends JPanel {
+    private JTextField txtSearch;
     private DefaultTableModel tableModel;
     private JTable table;
     private HoaDonBanDAO dao;
@@ -77,8 +78,20 @@ public class HoaDonBanPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(LuxuryTheme.NAVY, 1));
         
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setOpaque(false);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã HĐ/Mã Phiên/Mã KH/Mã NV): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
+
         panel.add(scroll, BorderLayout.CENTER);
 
         // --- CẬP NHẬT: THÊM COMPONENT PHÂN TRANG ---
@@ -124,9 +137,21 @@ public class HoaDonBanPanel extends JPanel {
         return panel;
     }
 
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+        lbl.setForeground(LuxuryTheme.NAVY);
+        return lbl;
+    }
+
     // --- CẬP NHẬT: LOGIC PHÂN TRANG ---
     private void loadData() {
-        allData = dao.getAllHoaDonBan(); 
+        if (txtSearch != null) txtSearch.setText("");
+        loadData(dao.getAllHoaDonBan());
+    }
+
+    private void loadData(List<HoaDonBan> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }

@@ -219,6 +219,17 @@ public class SanPhamPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(LuxuryTheme.CREAM);
 
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã/Tên): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
+
         tableModel = new DefaultTableModel(new String[]{"Mã SP", "Tên SP", "Loại", "Giá Bán", "Tồn Kho", "Mã NCC"}, 0);
         table = new JTable(tableModel); table.setRowHeight(40);
         table.getTableHeader().setBackground(LuxuryTheme.NAVY); table.getTableHeader().setForeground(LuxuryTheme.GOLD); table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
@@ -286,14 +297,18 @@ public class SanPhamPanel extends JPanel {
     private void refreshForm() {
         txtMaSP.setText(dao.sinhMaMoi());
         txtTenSP.setText(""); txtGiaBan.setText("0"); txtSoLuong.setText("0"); 
+        if (txtSearch != null) txtSearch.setText("");
         cbLoai.setSelectedIndex(0);
         selectedFileToCopy = null; currentImagePath = ""; hienThiAnh(""); 
         lblGiaNhapTB.setText("Giá nhập gốc (TB): 0 đ");
 
         loadNhaCungCapToComboBox();
         
-        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
-        allData = dao.getAllSanPham();
+        loadData(dao.getAllSanPham());
+    }
+
+    private void loadData(List<SanPham> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }

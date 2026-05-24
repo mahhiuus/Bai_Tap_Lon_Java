@@ -129,6 +129,35 @@ public class HoaDonBanDAO {
         return ds;
     }
 
+    public List<HoaDonBan> timKiem(String keyword) {
+        List<HoaDonBan> ds = new ArrayList<>();
+        String sql = "SELECT * FROM hoa_don_ban WHERE ma_hdb LIKE ? OR ma_phien LIKE ? OR ma_kh LIKE ? OR ma_nv LIKE ? ORDER BY ma_hdb DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String likeKeyword = "%" + (keyword == null ? "" : keyword) + "%";
+            ps.setString(1, likeKeyword);
+            ps.setString(2, likeKeyword);
+            ps.setString(3, likeKeyword);
+            ps.setString(4, likeKeyword);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                HoaDonBan hdb = new HoaDonBan();
+                hdb.setMaHDB(rs.getString("ma_hdb"));
+                hdb.setMaPhien(rs.getString("ma_phien"));
+                hdb.setMaKH(rs.getString("ma_kh"));
+                hdb.setMaNV(rs.getString("ma_nv"));
+                Date d = rs.getDate("ngay_ban");
+                if(d != null) hdb.setNgayBan(d.toLocalDate());
+                hdb.setTienBida(rs.getDouble("tien_bida"));
+                hdb.setTienSanPham(rs.getDouble("tien_san_pham"));
+                hdb.setTongTien(rs.getDouble("tong_tien"));
+                hdb.setGhiChu(rs.getString("ghi_chu"));
+                ds.add(hdb);
+            }
+        } catch (SQLException e) { throw new RuntimeException("Lỗi khi tìm kiếm hoá đơn bán: " + e.getMessage(), e); }
+        return ds;
+    }
+
     public HoaDonBan layTheoId(String maHDB) {
         String sql = "SELECT * FROM hoa_don_ban WHERE ma_hdb=?";
         try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {

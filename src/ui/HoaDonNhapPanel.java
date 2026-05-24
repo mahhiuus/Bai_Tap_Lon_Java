@@ -1,11 +1,16 @@
 package ui;
 
 import dao.HoaDonNhapDAO;
+import dao.ChiTietHoaDonNhapDAO;
+import dao.HoaDonNhapDAO;
 import dao.NhaCungCapDAO;
 import dao.NhanVienDAO;
+import dao.SanPhamDAO;
+import model.ChiTietHoaDonNhap;
 import model.HoaDonNhap;
 import model.NhaCungCap;
 import model.NhanVien;
+import model.SanPham;
 import model.TaiKhoan;
 import com.toedter.calendar.JDateChooser;
 
@@ -152,8 +157,116 @@ public class HoaDonNhapPanel extends JPanel {
 
     private void inPhieuNhapPDF() {
         int r = table.getSelectedRow();
-        if (r < 0) { JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 phiếu nhập để in!"); return; }
-        // Giữ nguyên logic in PDF cũ
+        if (r < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 phiếu nhập để in!");
+            return;
+        }
+
+        String maHDN = table.getValueAt(r, 0).toString();
+        String maNCC = table.getValueAt(r, 1).toString();
+        String maNV = table.getValueAt(r, 2).toString();
+        String ngayNhapStr = table.getValueAt(r, 3).toString();
+        String tongTienStr = table.getValueAt(r, 4).toString();
+
+        NhaCungCap ncc = new NhaCungCapDAO().timTheoMaNhaCungCap(maNCC);
+        NhanVien nv = new NhanVienDAO().timTheoMaNhanVien(maNV);
+        List<ChiTietHoaDonNhap> chiTiets = new ChiTietHoaDonNhapDAO().getChiTietTheoMaHDN(maHDN);
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn nơi lưu Phiếu Nhập PDF");
+        fileChooser.setSelectedFile(new File(maHDN + "_PhieuNhap.pdf"));
+
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (!file.getName().toLowerCase().endsWith(".pdf")) {
+                file = new File(file.getParentFile(), file.getName() + ".pdf");
+            }
+
+            try {
+                Document document = new Document(PageSize.A4);
+                PdfWriter.getInstance(document, new FileOutputStream(file));
+                document.open();
+
+                BaseFont bf = BaseFont.createFont("C:/Windows/Fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                com.itextpdf.text.Font titleFont = new com.itextpdf.text.Font(bf, 16, com.itextpdf.text.Font.BOLD);
+                com.itextpdf.text.Font headerFont = new com.itextpdf.text.Font(bf, 12, com.itextpdf.text.Font.BOLD);
+                com.itextpdf.text.Font normalFont = new com.itextpdf.text.Font(bf, 11, com.itextpdf.text.Font.NORMAL);
+
+                Paragraph title = new Paragraph("PHIẾU NHẬP HÀNG", titleFont);
+                title.setAlignment(Element.ALIGN_CENTER);
+                document.add(title);
+                document.add(new Paragraph(" ", normalFont));
+
+                Paragraph company = new Paragraph("BILLIARDS CLUB CENTER - LUXURY EDITION", headerFont);
+                company.setAlignment(Element.ALIGN_CENTER);
+                document.add(company);
+                document.add(new Paragraph("Địa chỉ: 123 Đường Cầu Giấy, Q. Cầu Giấy, Hà Nội", normalFont));
+                document.add(new Paragraph("Hotline: 0988.888.888", normalFont));
+                document.add(new Paragraph(" ", normalFont));
+                document.add(new Paragraph("Thông tin phiếu nhập:", headerFont));
+
+                PdfPTable infoTable = new PdfPTable(2);
+                infoTable.setWidthPercentage(100);
+                infoTable.setSpacingBefore(8);
+                infoTable.setWidths(new float[]{2f, 5f});
+                infoTable.addCell(new Phrase("Mã HDN:", normalFont));
+                infoTable.addCell(new Phrase(maHDN, normalFont));
+                infoTable.addCell(new Phrase("Nhà cung cấp:", normalFont));
+                infoTable.addCell(new Phrase(ncc != null ? ncc.getTenCongTy() + " (" + maNCC + ")" : maNCC, normalFont));
+                infoTable.addCell(new Phrase("Nhân viên nhập:", normalFont));
+                infoTable.addCell(new Phrase(nv != null ? nv.getTenNV() + " (" + maNV + ")" : maNV, normalFont));
+                infoTable.addCell(new Phrase("Ngày nhập:", normalFont));
+                infoTable.addCell(new Phrase(ngayNhapStr, normalFont));
+                infoTable.addCell(new Phrase("Tổng tiền:", normalFont));
+                infoTable.addCell(new Phrase(String.format("%,.0f VNĐ", Double.parseDouble(tongTienStr.replace(",", ""))), normalFont));
+                document.add(infoTable);
+
+                document.add(new Paragraph(" ", normalFont));
+                document.add(new Paragraph("Chi tiết sản phẩm:", headerFont));
+
+                PdfPTable pdfTable = new PdfPTable(5);
+                pdfTable.setWidthPercentage(100);
+                pdfTable.setSpacingBefore(8);
+                pdfTable.setWidths(new float[]{2f, 4f, 2f, 2f, 3f});
+                pdfTable.addCell(new Phrase("Mã SP", headerFont));
+                pdfTable.addCell(new Phrase("Tên SP", headerFont));
+                pdfTable.addCell(new Phrase("Số lượng", headerFont));
+                pdfTable.addCell(new Phrase("Đơn giá", headerFont));
+                pdfTable.addCell(new Phrase("Thành tiền", headerFont));
+
+                double total = 0;
+                SanPhamDAO spDao = new SanPhamDAO();
+                for (ChiTietHoaDonNhap ct : chiTiets) {
+                    String maSP = ct.getMaSP();
+                    SanPham sp = spDao.layTheoId(maSP);
+                    String tenSP = sp != null ? sp.getTenSP() : maSP;
+                    double thanhTien = ct.getSoLuong() * ct.getDonGiaNhap();
+                    total += thanhTien;
+
+                    pdfTable.addCell(new Phrase(maSP, normalFont));
+                    pdfTable.addCell(new Phrase(tenSP, normalFont));
+                    pdfTable.addCell(new Phrase(String.valueOf(ct.getSoLuong()), normalFont));
+                    pdfTable.addCell(new Phrase(String.format("%,.0f", ct.getDonGiaNhap()), normalFont));
+                    pdfTable.addCell(new Phrase(String.format("%,.0f", thanhTien), normalFont));
+                }
+                document.add(pdfTable);
+
+                document.add(new Paragraph(" ", normalFont));
+                Paragraph totalParagraph = new Paragraph("Tổng tiền nhập: " + String.format("%,.0f VNĐ", total), headerFont);
+                totalParagraph.setAlignment(Element.ALIGN_RIGHT);
+                document.add(totalParagraph);
+
+                document.add(new Paragraph(" ", normalFont));
+                document.add(new Paragraph("Xin cảm ơn!", normalFont));
+
+                document.close();
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(file);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi in PDF: " + ex.getMessage());
+            }
+        }
     }
 
     private void loadDataToComboBox() {
@@ -176,6 +289,17 @@ public class HoaDonNhapPanel extends JPanel {
     private JPanel createTableAndSearchPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setOpaque(false);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã HĐN): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadData(dao.timKiemTheoMa(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"Mã HĐN", "Mã NCC", "Mã NV", "Ngày Nhập", "Tổng Tiền"}, 0);
         table = new JTable(tableModel);
@@ -228,9 +352,14 @@ public class HoaDonNhapPanel extends JPanel {
     private void refreshForm() {
         txtMaHDN.setText(dao.sinhMaMoi());
         txtTongTien.setText("0");
+        if (txtSearch != null) txtSearch.setText("");
         dateChooser.setDate(new java.util.Date());
         
-        allData = dao.getAllHoaDonNhap();
+        loadData(dao.getAllHoaDonNhap());
+    }
+
+    private void loadData(List<HoaDonNhap> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }
