@@ -83,6 +83,43 @@ public class SanPhamDAO {
             }
     }
 
+    // public List<SanPham> timKiem(String keyword) {
+    //     return timKiem(keyword, "Tất cả");
+    // }
+
+    public List<SanPham> timKiem(String keyword, String loai) {
+        List<SanPham> ds = new ArrayList<>();
+        String sql = "SELECT * FROM san_pham WHERE (LOWER(ma_sp) LIKE ? OR LOWER(ten_sp) LIKE ?)";
+        if (!"Tất cả".equalsIgnoreCase(loai) && loai != null && !loai.trim().isEmpty()) {
+            sql += " AND LOWER(loai) = ?";
+        }
+        String kw = "%" + keyword.toLowerCase() + "%";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, kw);
+            ps.setString(2, kw);
+            int index = 3;
+            if (!"Tất cả".equalsIgnoreCase(loai) && loai != null && !loai.trim().isEmpty()) {
+                ps.setString(index, loai.toLowerCase());
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSP(rs.getString("ma_sp"));
+                sp.setTenSP(rs.getString("ten_sp"));
+                sp.setLoaiSP(rs.getString("loai"));
+                sp.setGiaBan(rs.getDouble("gia_ban"));
+                sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                sp.setMaNCC(rs.getString("ma_ncc"));
+                sp.setHinhAnh(rs.getString("hinh_anh"));
+                ds.add(sp);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
+
     public List<SanPham> timKiemTheoTen(String ten) {
         List<SanPham> ds = new ArrayList<>();
         String sql = "SELECT * FROM san_pham WHERE ten_sp LIKE ?";

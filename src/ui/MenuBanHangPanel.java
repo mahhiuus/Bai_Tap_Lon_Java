@@ -23,6 +23,8 @@ import java.util.List;
 
 public class MenuBanHangPanel extends JPanel {
     private JPanel pnlProductsGrid;
+    private JTextField txtSearch;
+    private JButton btnSearch;
     private JComboBox<String> cbPhienChoi;
     private DefaultTableModel tableModel;
     private JTable table;
@@ -93,11 +95,40 @@ public class MenuBanHangPanel extends JPanel {
             btnTab.setPreferredSize(new Dimension(160, 45));
             btnTab.addActionListener(e -> {
                 currentCategory = cat;
-                loadProducts(cat);
+                loadProducts(cat, txtSearch != null ? txtSearch.getText().trim() : "");
             });
             pnlTabs.add(btnTab);
         }
-        pnlLeft.add(pnlTabs, BorderLayout.NORTH);
+
+        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        pnlSearch.setOpaque(false);
+        JLabel lblSearch = new JLabel("Tìm kiếm (Mã/Tên):");
+        lblSearch.setFont(new Font("Arial", Font.BOLD, 13));
+        lblSearch.setForeground(LuxuryTheme.NAVY);
+        pnlSearch.add(lblSearch);
+
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(260, 42));
+        txtSearch.setFont(new Font("Arial", Font.PLAIN, 14));
+        txtSearch.addActionListener(e -> {
+            if (btnSearch != null) btnSearch.doClick();
+        });
+        pnlSearch.add(txtSearch);
+
+        btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.setPreferredSize(new Dimension(120, 42));
+        btnSearch.setFont(new Font("Arial", Font.BOLD, 13));
+        btnSearch.addActionListener(e -> loadProducts(currentCategory, txtSearch.getText().trim()));
+        pnlSearch.add(btnSearch);
+
+        JPanel pnlHeader = new JPanel();
+        pnlHeader.setLayout(new BoxLayout(pnlHeader, BoxLayout.Y_AXIS));
+        pnlHeader.setOpaque(false);
+        pnlHeader.add(pnlTabs);
+        pnlHeader.add(Box.createVerticalStrut(6));
+        pnlHeader.add(pnlSearch);
+
+        pnlLeft.add(pnlHeader, BorderLayout.NORTH);
 
         pnlProductsGrid = new JPanel(new GridLayout(0, 4, 15, 20)); 
         pnlProductsGrid.setOpaque(false);
@@ -141,14 +172,27 @@ public class MenuBanHangPanel extends JPanel {
     }
 
     private void loadProducts(String category) {
+        loadProducts(category, txtSearch != null ? txtSearch.getText().trim() : "");
+    }
+
+    private void loadProducts(String category, String keyword) {
         pnlProductsGrid.removeAll();
-        List<SanPham> dsSP = spDao.getAllSanPham();
-        for (SanPham sp : dsSP) {
-            if (category.equals("TẤT CẢ") || sp.getLoaiSP().equalsIgnoreCase(category)) {
-                int tonKhoAo = tinhTonKhoAo(sp);
-                pnlProductsGrid.add(createProductCard(sp, tonKhoAo));
-            }
+
+        String key = keyword == null ? "" : keyword.trim();
+        List<SanPham> dsSP;
+
+        if (key.isEmpty() && "TẤT CẢ".equalsIgnoreCase(category)) {
+            dsSP = spDao.getAllSanPham();
+        } else {
+            String searchCategory = "TẤT CẢ".equalsIgnoreCase(category) ? "Tất cả" : category;
+            dsSP = spDao.timKiem(key, searchCategory);
         }
+
+        for (SanPham sp : dsSP) {
+            int tonKhoAo = tinhTonKhoAo(sp);
+            pnlProductsGrid.add(createProductCard(sp, tonKhoAo));
+        }
+
         pnlProductsGrid.revalidate();
         pnlProductsGrid.repaint();
     }

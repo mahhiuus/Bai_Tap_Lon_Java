@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BanHangPanel extends JPanel {
@@ -19,6 +20,7 @@ public class BanHangPanel extends JPanel {
     private JComboBox<String> cbPhienChoi;
     private DefaultTableModel tableModel;
     private JLabel lblTongTien;
+    private List<SanPham> allProducts = new ArrayList<>();
     
     private SanPhamDAO spDao = new SanPhamDAO();
     private PhienChoiDAO phienDao = new PhienChoiDAO();
@@ -46,12 +48,12 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createProductGrid() {
-        JPanel wrap = new JPanel(new BorderLayout());
+        JPanel wrap = new JPanel(new BorderLayout(10, 10));
         wrap.setOpaque(false);
 
-        gridPanel = new JPanel(new GridLayout(0, 3, 15, 15)); // Lưới 3 cột
+        gridPanel = new JPanel(new GridLayout(0, 3, 15, 15));
         gridPanel.setOpaque(false);
-        
+
         List<SanPham> dsSP = spDao.getAllSanPham();
         for (SanPham sp : dsSP) {
             gridPanel.add(createProductCard(sp));

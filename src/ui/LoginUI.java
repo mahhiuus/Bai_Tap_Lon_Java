@@ -212,4 +212,6 @@ class ImagePanel extends JPanel {
         int y = (panelHeight - newHeight) / 2;
         g.drawImage(image, x, y, newWidth, newHeight, this);
     }
+     
 }
+
