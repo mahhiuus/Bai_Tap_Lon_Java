@@ -234,5 +234,5 @@ INSERT INTO hoa_don_ban (ma_hdb, ma_phien, ma_kh, ma_nv, ngay_ban, tien_bida, ti
 INSERT INTO chi_tiet_hoa_don_ban (ma_chi_tiet, ma_hdb, ma_sp, so_luong, don_gia_ban) VALUES 
 ('CTB01', 'HDB01', 'SP01', 2, 10000),
 ('CTB02', 'HDB01', 'SP02', 1, 15000);
---Phương mày nhập lỗi xem fuck you
---ALTER TABLE san_pham ADD COLUMN hinh_anh VARCHAR(255);
+
+ALTER TABLE san_pham ADD COLUMN hinh_anh VARCHAR(255);

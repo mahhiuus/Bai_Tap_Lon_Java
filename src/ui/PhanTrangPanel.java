@@ -80,7 +80,12 @@ public class PhanTrangPanel extends JPanel {
 
     public int getStartIndex() { return (currentPage - 1) * itemsPerPage; }
     public int getEndIndex() { return Math.min(getStartIndex() + itemsPerPage, totalItems);}
-        // --- THÊM ĐÚNG DÒNG NÀY VÀO LÀ HẾT LỖI ---
+
+    public void setCurrentPage(int currentPage) {
+        this.currentPage = Math.max(1, currentPage);
+        updateLabel();
+    }
+
     public int getCurrentPage() { return currentPage; }
      
 }
