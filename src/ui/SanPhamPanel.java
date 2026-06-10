@@ -218,7 +218,6 @@ public class SanPhamPanel extends JPanel {
     private JPanel createTableAndSearchPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(LuxuryTheme.CREAM);
-
         
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
@@ -251,6 +250,8 @@ public class SanPhamPanel extends JPanel {
 
         searchPanel.add(row1);
         searchPanel.add(row2);
+
+   
         panel.add(searchPanel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"Mã SP", "Tên SP", "Loại", "Giá Bán", "Tồn Kho", "Mã NCC"}, 0);
@@ -339,6 +340,7 @@ public class SanPhamPanel extends JPanel {
     private void refreshForm() {
         txtMaSP.setText(dao.sinhMaMoi());
         txtTenSP.setText(""); txtGiaBan.setText("0"); txtSoLuong.setText("0"); 
+        if (txtSearch != null) txtSearch.setText("");
         cbLoai.setSelectedIndex(0);
         if (txtSearch != null) txtSearch.setText("");
         if (cbLoaiTimKiem != null) cbLoaiTimKiem.setSelectedIndex(0);
@@ -347,8 +349,11 @@ public class SanPhamPanel extends JPanel {
 
         loadNhaCungCapToComboBox();
         
-        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
-        allData = dao.getAllSanPham();
+        loadData(dao.getAllSanPham());
+    }
+
+    private void loadData(List<SanPham> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }

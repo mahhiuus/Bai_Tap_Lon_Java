@@ -280,6 +280,31 @@ public class TaiKhoanDAO {
         return layTatCaTaiKhoan();
     }
 
+    public List<TaiKhoan> timKiem(String keyword) {
+        List<TaiKhoan> list = new ArrayList<>();
+        String sql = "SELECT * FROM tai_khoan WHERE ma_tk LIKE ? OR ten_dang_nhap LIKE ? OR ma_nv LIKE ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String likeKeyword = "%" + (keyword == null ? "" : keyword) + "%";
+            stmt.setString(1, likeKeyword);
+            stmt.setString(2, likeKeyword);
+            stmt.setString(3, likeKeyword);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                TaiKhoan tk = new TaiKhoan();
+                tk.setMaTK(rs.getString("ma_tk"));
+                tk.setTenDangNhap(rs.getString("ten_dang_nhap"));
+                tk.setMatKhau(rs.getString("mat_khau"));
+                tk.setVaiTro(rs.getString("vai_tro"));
+                tk.setMaNV(rs.getString("ma_nv"));
+                list.add(tk);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi tìm kiếm tài khoản: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
     // public static void main(String[] args) {
     //     TaiKhoanDAO dao = new TaiKhoanDAO();
     // //     TaiKhoan tk = new TaiKhoan();

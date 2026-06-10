@@ -10,7 +10,7 @@ import java.awt.event.*;
 import java.util.List;
 
 public class BanBidaPanel extends JPanel {
-    private JTextField txtMaBan, txtTenBan;
+    private JTextField txtMaBan, txtTenBan, txtSearch;
     private JComboBox<String> cbLoaiBan;
     private DefaultTableModel tableModel;
     private JTable table;
@@ -154,8 +154,19 @@ public class BanBidaPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setOpaque(false);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã/Tên): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"Mã Bàn", "Tên Bàn", "Loại", "Trạng Thái"}, 0);
         table = new JTable(tableModel);
@@ -195,10 +206,14 @@ public class BanBidaPanel extends JPanel {
     private void refreshForm() {
         txtMaBan.setText(dao.sinhMaMoi());
         txtTenBan.setText("");
+        if (txtSearch != null) txtSearch.setText("");
         cbLoaiBan.setSelectedIndex(0);
         
-        // --- CẬP NHẬT: TẢI DATA VÀO BIẾN PHÂN TRANG ---
-        allData = dao.layTatCaBan();
+        loadData(dao.layTatCaBan());
+    }
+
+    private void loadData(List<BanBida> data) {
+        allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
     }

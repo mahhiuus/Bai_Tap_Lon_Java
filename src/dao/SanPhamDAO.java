@@ -83,9 +83,9 @@ public class SanPhamDAO {
             }
     }
 
-    public List<SanPham> timKiem(String keyword) {
-        return timKiem(keyword, "Tất cả");
-    }
+    // public List<SanPham> timKiem(String keyword) {
+    //     return timKiem(keyword, "Tất cả");
+    // }
 
     public List<SanPham> timKiem(String keyword, String loai) {
         List<SanPham> ds = new ArrayList<>();
@@ -139,6 +139,32 @@ public class SanPhamDAO {
                 ds.add(sp);
             }
         } catch (Exception e) { e.printStackTrace(); }
+        return ds;
+    }
+
+    public List<SanPham> timKiem(String keyword) {
+        List<SanPham> ds = new ArrayList<>();
+        String sql = "SELECT * FROM san_pham WHERE ma_sp LIKE ? OR ten_sp LIKE ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String likeKeyword = "%" + (keyword == null ? "" : keyword) + "%";
+            ps.setString(1, likeKeyword);
+            ps.setString(2, likeKeyword);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSP(rs.getString("ma_sp"));
+                sp.setTenSP(rs.getString("ten_sp"));
+                sp.setLoaiSP(rs.getString("loai"));
+                sp.setGiaBan(rs.getDouble("gia_ban"));
+                sp.setSoLuongTon(rs.getInt("so_luong_ton"));
+                sp.setMaNCC(rs.getString("ma_ncc"));
+                sp.setHinhAnh(rs.getString("hinh_anh"));
+                ds.add(sp);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return ds;
     }
 

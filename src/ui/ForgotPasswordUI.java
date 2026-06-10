@@ -15,7 +15,7 @@ public class ForgotPasswordUI extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Forgot Password - Billard Management System");
+        setTitle("Quên mật khẩu - Hệ Thống Quản Lý Billiard");
         setSize(1000, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);

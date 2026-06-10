@@ -11,7 +11,7 @@ import session.SessionManager;
 public class LoginUI extends JFrame {
 
     public LoginUI() {
-        setTitle("Login - Billard Management System");
+        setTitle("Đăng Nhập - Hệ Thống Quản Lý Billiard");
         setSize(1000, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -40,7 +40,7 @@ public class LoginUI extends JFrame {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(40, 25, 40, 25));
 
-        JLabel lblTitle = new JLabel("Login to Billard Management");
+        JLabel lblTitle = new JLabel("Login to Billiard Management");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitle.setForeground(mainColor);
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);

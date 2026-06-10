@@ -12,7 +12,7 @@ import java.util.List;
 
 public class KhachHangPanel extends JPanel {
     
-    private JTextField txtMaKH, txtTenKH, txtSdt;
+    private JTextField txtMaKH, txtTenKH, txtSdt, txtSearch;
     private DefaultTableModel tableModel;
     private JTable table;
     private KhachHangDAO dao;
@@ -139,8 +139,19 @@ public class KhachHangPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(LuxuryTheme.CREAM);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setOpaque(false);
+        searchPanel.add(createLabel("Tìm kiếm (Mã/Tên): "));
+        txtSearch = LuxuryTheme.createTextField();
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+        searchPanel.add(txtSearch);
+        JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+        btnSearch.addActionListener(e -> loadDataToTable(dao.timKiem(txtSearch.getText().trim())));
+        searchPanel.add(btnSearch);
+        panel.add(searchPanel, BorderLayout.NORTH);
 
         String[] cols = {"Mã KH", "Họ Tên", "SĐT", "Điểm", "Ngày ĐK"};
         tableModel = new DefaultTableModel(cols, 0);
@@ -185,12 +196,17 @@ public class KhachHangPanel extends JPanel {
         txtMaKH.setText(dao.sinhMaMoi()); // Gọi lệnh tự sinh KH01, KH02...
         txtTenKH.setText("");
         txtSdt.setText("");
+        if (txtSearch != null) txtSearch.setText("");
         loadDataToTable(); // Cập nhật lại bảng
     }
 
     // --- LOGIC DATA & PHÂN TRANG MỚI ---
     private void loadDataToTable() {
-        allKhachHang = dao.getAllKhachHang();
+        loadDataToTable(dao.getAllKhachHang());
+    }
+
+    private void loadDataToTable(List<KhachHang> data) {
+        allKhachHang = data;
         phanTrang.setTotalItems(allKhachHang.size());
         updateTableDisplay();
     }

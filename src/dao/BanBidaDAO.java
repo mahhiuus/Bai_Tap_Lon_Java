@@ -163,6 +163,30 @@ public class BanBidaDAO {
         return list;
     }
 
+    public List<BanBida> timKiem(String keyword) {
+        List<BanBida> list = new ArrayList<>();
+        String sql = "SELECT * FROM ban_bida WHERE ma_ban LIKE ? OR ten_ban LIKE ? ORDER BY ma_ban DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String likeKeyword = "%" + (keyword == null ? "" : keyword) + "%";
+            stmt.setString(1, likeKeyword);
+            stmt.setString(2, likeKeyword);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BanBida ban = new BanBida();
+                    ban.setMaBan(rs.getString("ma_ban"));
+                    ban.setTenBan(rs.getString("ten_ban"));
+                    ban.setLoaiBan(rs.getString("loai_ban"));
+                    ban.setTrangThaiBan(rs.getString("trang_thai"));
+                    list.add(ban);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi tìm kiếm bàn bida: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
     // Phương thức tìm bàn theo mã bàn
     public BanBida timTheoMaBan(String maBan) {
         if (maBan == null || maBan.trim().isEmpty()) {
