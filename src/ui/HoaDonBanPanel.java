@@ -21,6 +21,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.toedter.calendar.JDateChooser;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
 
 public class HoaDonBanPanel extends JPanel {
     private JTextField txtSearch;
@@ -33,6 +37,7 @@ public class HoaDonBanPanel extends JPanel {
     // --- CẬP NHẬT: Biến phân trang ---
     private List<HoaDonBan> allData;
     private PhanTrangPanel phanTrang;
+        private JDateChooser dateChooserFrom, dateChooserTo;
 
     public HoaDonBanPanel(TaiKhoan user) {
         this.currentUser = user;
@@ -83,6 +88,22 @@ public class HoaDonBanPanel extends JPanel {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setOpaque(false);
+            searchPanel.add(createLabel("Từ ngày: "));
+            dateChooserFrom = new JDateChooser();
+            dateChooserFrom.setDateFormatString("dd/MM/yyyy");
+            dateChooserFrom.setPreferredSize(new Dimension(120, 35));
+            searchPanel.add(dateChooserFrom);
+        
+            searchPanel.add(createLabel("Đến ngày: "));
+            dateChooserTo = new JDateChooser();
+            dateChooserTo.setDateFormatString("dd/MM/yyyy");
+            dateChooserTo.setPreferredSize(new Dimension(120, 35));
+            searchPanel.add(dateChooserTo);
+        
+            JButton btnSearchDate = LuxuryTheme.createButton("Tìm Theo Ngày", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+            btnSearchDate.addActionListener(e -> searchByDate());
+            searchPanel.add(btnSearchDate);
+        
         searchPanel.add(createLabel("Tìm kiếm (Mã HĐ/Mã Phiên/Mã KH/Mã NV): "));
         txtSearch = LuxuryTheme.createTextField();
         txtSearch.setPreferredSize(new Dimension(250, 35));
@@ -181,6 +202,29 @@ public class HoaDonBanPanel extends JPanel {
         }
 
         lblTongDoanhThu.setText("Tổng (Trang " + phanTrang.getCurrentPage() + "): " + String.format("%,.0f VNĐ", tongDoanhThuTrang));
+    }
+    
+    private void searchByDate() {
+        java.util.Date dateFrom = dateChooserFrom.getDate();
+        java.util.Date dateTo = dateChooserTo.getDate();
+    
+        if (dateFrom == null || dateTo == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn cả ngày bắt đầu và ngày kết thúc!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        LocalDate ldFrom = dateFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate ldTo = dateTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        
+        List<HoaDonBan> filtered = dao.getAllHoaDonBan();
+        List<HoaDonBan> result = new ArrayList<>();
+        
+        for (HoaDonBan hdb : filtered) {
+            if (hdb.getNgayBan() != null && !hdb.getNgayBan().isBefore(ldFrom) && !hdb.getNgayBan().isAfter(ldTo)) {
+                result.add(hdb);
+            }
+        }        
+        loadData(result);
     }
 
     private void xoaHoaDon() {

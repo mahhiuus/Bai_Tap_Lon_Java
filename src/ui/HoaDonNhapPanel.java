@@ -29,6 +29,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
 
 public class HoaDonNhapPanel extends JPanel {
     private JTextField txtMaHDN, txtTongTien, txtSearch;
@@ -44,6 +45,7 @@ public class HoaDonNhapPanel extends JPanel {
     private PhanTrangPanel phanTrang;
     private JLabel lblTongTienTrang;
 
+        private JDateChooser dateChooserFromSearch, dateChooserToSearch;
     public HoaDonNhapPanel(TaiKhoan user) {
         this.currentUser = user;
         dao = new HoaDonNhapDAO();
@@ -292,6 +294,22 @@ public class HoaDonNhapPanel extends JPanel {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setOpaque(false);
+            searchPanel.add(createLabel("Từ ngày: "));
+            dateChooserFromSearch = new JDateChooser();
+            dateChooserFromSearch.setDateFormatString("dd/MM/yyyy");
+            dateChooserFromSearch.setPreferredSize(new Dimension(120, 35));
+            searchPanel.add(dateChooserFromSearch);
+        
+            searchPanel.add(createLabel("Đến ngày: "));
+            dateChooserToSearch = new JDateChooser();
+            dateChooserToSearch.setDateFormatString("dd/MM/yyyy");
+            dateChooserToSearch.setPreferredSize(new Dimension(120, 35));
+            searchPanel.add(dateChooserToSearch);
+        
+            JButton btnSearchDate = LuxuryTheme.createButton("Tìm Theo Ngày", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
+            btnSearchDate.addActionListener(e -> searchByDate());
+            searchPanel.add(btnSearchDate);
+        
         searchPanel.add(createLabel("Tìm kiếm (Mã HĐN): "));
         txtSearch = LuxuryTheme.createTextField();
         txtSearch.setPreferredSize(new Dimension(250, 35));
@@ -302,6 +320,7 @@ public class HoaDonNhapPanel extends JPanel {
         panel.add(searchPanel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new String[]{"Mã HĐN", "Mã NCC", "Mã NV", "Ngày Nhập", "Tổng Tiền"}, 0);
+    
         table = new JTable(tableModel);
         table.setRowHeight(40); 
         table.getTableHeader().setBackground(LuxuryTheme.NAVY);
@@ -348,7 +367,30 @@ public class HoaDonNhapPanel extends JPanel {
         lbl.setForeground(LuxuryTheme.NAVY);
         return lbl;
     }
-
+    
+    private void searchByDate() {
+        java.util.Date dateFrom = dateChooserFromSearch.getDate();
+        java.util.Date dateTo = dateChooserToSearch.getDate();
+        
+        if (dateFrom == null || dateTo == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn cả ngày bắt đầu và ngày kết thúc!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        LocalDate ldFrom = dateFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate ldTo = dateTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        
+        List<HoaDonNhap> filtered = dao.getAllHoaDonNhap();
+        List<HoaDonNhap> result = new ArrayList<>();
+        
+        for (HoaDonNhap hdn : filtered) {
+            if (hdn.getNgayNhap() != null && !hdn.getNgayNhap().isBefore(ldFrom) && !hdn.getNgayNhap().isAfter(ldTo)) {
+                result.add(hdn);
+            }
+        }
+        
+        loadData(result);
+    }
     private void refreshForm() {
         txtMaHDN.setText(dao.sinhMaMoi());
         txtTongTien.setText("0");

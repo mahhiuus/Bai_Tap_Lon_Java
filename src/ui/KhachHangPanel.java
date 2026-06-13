@@ -64,11 +64,37 @@ public class KhachHangPanel extends JPanel {
         // Tên KH
         gbc.gridy = 2; form.add(createLabel("Tên Khách Hàng:"), gbc);
         txtTenKH = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ (bao gồm khoảng trắng và dấu tiếng Việt)
+        txtTenKH.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Cho phép chữ cái, khoảng trắng, dấu tiếng Việt
+                if (!Character.isLetter(c) && c != ' ' && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
         gbc.gridy = 3; form.add(txtTenKH, gbc);
 
         // SĐT
         gbc.gridy = 4; form.add(createLabel("Số Điện Thoại:"), gbc);
         txtSdt = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ số, tối đa 10 kí tự
+        txtSdt.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Chỉ cho phép chữ số
+                if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+                // Giới hạn 10 chữ số
+                if (txtSdt.getText().length() >= 10 && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
         gbc.gridy = 5; form.add(txtSdt, gbc);
 
         // --- CẬP NHẬT: Khung Nút Bấm đổi sang GridLayout 2x2 để chứa 4 nút không bị che ---
@@ -83,12 +109,9 @@ public class KhachHangPanel extends JPanel {
         // Sự kiện Thêm
         btnAdd.addActionListener(e -> {
             try {
-                String ten = txtTenKH.getText().trim();
-                if (ten.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Tên khách hàng không được để trống!");
-                    return;
-                }
+                if (!validateForm()) return;
                 
+                String ten = txtTenKH.getText().trim();
                 KhachHang kh = new KhachHang();
                 kh.setMaKH(txtMaKH.getText()); // Lấy mã đã sinh tự động trên form
                 kh.setTenKH(ten);
@@ -117,6 +140,24 @@ public class KhachHangPanel extends JPanel {
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
                 }
+            }
+        });
+
+        // Sự kiện Sửa
+        btnEdit.addActionListener(e -> {
+            try {
+                if (!validateForm()) return;
+                
+                KhachHang kh = new KhachHang();
+                kh.setMaKH(txtMaKH.getText());
+                kh.setTenKH(txtTenKH.getText().trim());
+                kh.setSdt(txtSdt.getText().trim());
+                
+                dao.capNhatKhachHang(kh);
+                refreshForm();
+                JOptionPane.showMessageDialog(this, "Cập nhật khách hàng thành công!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
             }
         });
 
@@ -227,5 +268,34 @@ public class KhachHangPanel extends JPanel {
                 kh.getDiemTichLuy(), kh.getNgayDangKy()
             });
         }
+    }
+
+    // Validation method
+    private boolean validateForm() {
+        String tenKH = txtTenKH.getText().trim();
+        String sdt = txtSdt.getText().trim();
+        
+        if (tenKH.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        // Check if name contains only letters and spaces
+        if (!tenKH.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+            JOptionPane.showMessageDialog(this, "Tên chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.length() != 10) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        return true;
     }
 }

@@ -54,19 +54,60 @@ public class NhaCungCapPanel extends JPanel {
         form.add(txtMaNCC, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Tên Công Ty:"), gbc); gbc.gridy = ++y;
-        txtTenCongTy = LuxuryTheme.createTextField(); form.add(txtTenCongTy, gbc);
+        txtTenCongTy = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ (bao gồm khoảng trắng và dấu tiếng Việt)
+        txtTenCongTy.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Cho phép chữ cái, khoảng trắng, dấu tiếng Việt
+                if (!Character.isLetter(c) && c != ' ' && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
+        form.add(txtTenCongTy, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Số Điện Thoại:"), gbc); gbc.gridy = ++y;
-        txtSDT = LuxuryTheme.createTextField(); form.add(txtSDT, gbc);
+        txtSDT = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ số, tối đa 10 kí tự
+        txtSDT.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Chỉ cho phép chữ số
+                if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+                // Giới hạn 10 chữ số
+                if (txtSDT.getText().length() >= 10 && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
+        form.add(txtSDT, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Địa Chỉ:"), gbc); gbc.gridy = ++y;
         txtDiaChi = LuxuryTheme.createTextField(); form.add(txtDiaChi, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Email:"), gbc); gbc.gridy = ++y;
-        txtEmail = LuxuryTheme.createTextField(); form.add(txtEmail, gbc);
+        txtEmail = LuxuryTheme.createTextField();
+        form.add(txtEmail, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Người Liên Hệ:"), gbc); gbc.gridy = ++y;
-        txtNguoiLienHe = LuxuryTheme.createTextField(); form.add(txtNguoiLienHe, gbc);
+        txtNguoiLienHe = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ (bao gồm khoảng trắng và dấu tiếng Việt)
+        txtNguoiLienHe.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Cho phép chữ cái, khoảng trắng, dấu tiếng Việt
+                if (!Character.isLetter(c) && c != ' ' && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
+        form.add(txtNguoiLienHe, gbc);
 
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setOpaque(false);
@@ -77,6 +118,7 @@ public class NhaCungCapPanel extends JPanel {
 
         btnAdd.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
                 dao.themNhaCungCap(ncc);
                 refreshForm();
@@ -86,6 +128,7 @@ public class NhaCungCapPanel extends JPanel {
 
         btnEdit.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
                 dao.capNhatNhaCungCap(ncc);
                 refreshForm();
@@ -193,5 +236,58 @@ public class NhaCungCapPanel extends JPanel {
             NhaCungCap n = allData.get(i);
             tableModel.addRow(new Object[]{n.getMaNCC(), n.getTenCongTy(), n.getSdt(), n.getDiaChi(), n.getEmail(), n.getNguoiLienHe()});
         }
+    }
+
+    // Validation method
+    private boolean validateForm() {
+        String tenCongTy = txtTenCongTy.getText().trim();
+        String sdt = txtSDT.getText().trim();
+        String email = txtEmail.getText().trim();
+        String nguoiLienHe = txtNguoiLienHe.getText().trim();
+        
+        if (tenCongTy.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên công ty!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        // Check if company name contains only letters and spaces
+        if (!tenCongTy.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+            JOptionPane.showMessageDialog(this, "Tên công ty chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.length() != 10) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (email.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập email!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        // Check email format: letters/numbers + @gmail.com
+        if (!email.matches("[a-zA-Z0-9]+@gmail\\.com")) {
+            JOptionPane.showMessageDialog(this, "Email phải có định dạng: kí tự/số@gmail.com", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (nguoiLienHe.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên người liên hệ!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        // Check if contact name contains only letters and spaces
+        if (!nguoiLienHe.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+            JOptionPane.showMessageDialog(this, "Tên người liên hệ chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        return true;
     }
 }

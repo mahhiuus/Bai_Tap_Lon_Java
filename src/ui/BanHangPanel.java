@@ -39,7 +39,7 @@ public class BanHangPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(createProductGrid());
         splitPane.setRightComponent(createOrderPanel());
-        splitPane.setDividerLocation(650);
+        splitPane.setDividerLocation(400);
         splitPane.setOpaque(false);
         splitPane.setBorder(null);
 
@@ -51,7 +51,7 @@ public class BanHangPanel extends JPanel {
         JPanel wrap = new JPanel(new BorderLayout(10, 10));
         wrap.setOpaque(false);
 
-        gridPanel = new JPanel(new GridLayout(0, 3, 15, 15));
+        gridPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         gridPanel.setOpaque(false);
 
         List<SanPham> dsSP = spDao.getAllSanPham();
@@ -59,13 +59,18 @@ public class BanHangPanel extends JPanel {
             gridPanel.add(createProductCard(sp));
         }
 
-        JScrollPane scroll = new JScrollPane(gridPanel);
+        int cardWidth = 220;
+        int totalWidth = (3 * cardWidth) + (2 * 15);
+        gridPanel.setPreferredSize(new Dimension(totalWidth, Integer.MAX_VALUE));
+
+        JScrollPane scroll = new JScrollPane(gridPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(LuxuryTheme.NAVY), "Danh Sách Sản Phẩm", 0, 0, 
             new Font("Arial", Font.BOLD, 16), LuxuryTheme.NAVY));
         scroll.getViewport().setOpaque(false);
         scroll.setOpaque(false);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.getHorizontalScrollBar().setUnitIncrement(16);
 
         wrap.add(scroll, BorderLayout.CENTER);
         return wrap;

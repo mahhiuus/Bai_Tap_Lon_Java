@@ -61,13 +61,41 @@ public class NhanVienPanel extends JPanel {
         form.add(txtMaNV, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Họ Tên:"), gbc); gbc.gridy = ++y;
-        txtTenNV = LuxuryTheme.createTextField(); form.add(txtTenNV, gbc);
+        txtTenNV = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ (bao gồm khoảng trắng và dấu tiếng Việt)
+        txtTenNV.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Cho phép chữ cái, khoảng trắng, dấu tiếng Việt
+                if (!Character.isLetter(c) && c != ' ' && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
+        form.add(txtTenNV, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Số Điện Thoại:"), gbc); gbc.gridy = ++y;
-        txtSDT = LuxuryTheme.createTextField(); form.add(txtSDT, gbc);
+        txtSDT = LuxuryTheme.createTextField();
+        // Chỉ cho phép chữ số, tối đa 10 kí tự
+        txtSDT.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                // Chỉ cho phép chữ số
+                if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+                // Giới hạn 10 chữ số
+                if (txtSDT.getText().length() >= 10 && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        });
+        form.add(txtSDT, gbc);
 
         gbc.gridy = ++y; form.add(createLabel("Giới Tính:"), gbc); gbc.gridy = ++y;
-        cbGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ"}); 
+        cbGioiTinh = new JComboBox<>(new String[]{"Nam", "Nu"}); 
         cbGioiTinh.setBackground(Color.WHITE);
         cbGioiTinh.setFont(new Font("Arial", Font.PLAIN, 15));
         form.add(cbGioiTinh, gbc);
@@ -94,6 +122,7 @@ public class NhanVienPanel extends JPanel {
 
         btnAdd.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 NhanVien nv = taoNhanVienTuForm();
                 dao.themNhanVien(nv);
                 refreshForm();
@@ -103,6 +132,7 @@ public class NhanVienPanel extends JPanel {
 
         btnEdit.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 NhanVien nv = taoNhanVienTuForm();
                 dao.capNhatNhanVien(nv);
                 refreshForm();
@@ -230,5 +260,34 @@ public class NhanVienPanel extends JPanel {
             String ngaySinh = nv.getNgaySinh() != null ? nv.getNgaySinh().format(fmt) : "";
             tableModel.addRow(new Object[]{nv.getMaNV(), nv.getTenNV(), nv.getSoDienThoai(), nv.getGioiTinh(), nv.getChucVu(), ngaySinh});
         }
+    }
+
+    // Validation method
+    private boolean validateForm() {
+        String tenNV = txtTenNV.getText().trim();
+        String sdt = txtSDT.getText().trim();
+        
+        if (tenNV.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên nhân viên!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        // Check if name contains only letters and spaces
+        if (!tenNV.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+            JOptionPane.showMessageDialog(this, "Tên chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        if (sdt.length() != 10) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        
+        return true;
     }
 }
