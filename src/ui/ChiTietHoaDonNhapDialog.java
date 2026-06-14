@@ -75,8 +75,16 @@ public class ChiTietHoaDonNhapDialog extends JDialog {
             String textSL = txtSoLuong.getText().replace(",", "").replace(".", "").trim();
             String textGia = txtDonGiaNhap.getText().replace(",", "").replace(".", "").trim();
 
-            int soLuong = Integer.parseInt(textSL);
-            double donGia = Double.parseDouble(textGia);
+            int soLuong = ValidationUtils.parsePositiveInt(textSL, "Số lượng nhập");
+            double donGia = ValidationUtils.parsePositiveMoney(textGia, "Đơn giá nhập");
+            if (soLuong > 100000) {
+                JOptionPane.showMessageDialog(this, "Số lượng nhập không được vượt quá 100,000!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (cbSanPham.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             String maSP = cbSanPham.getSelectedItem().toString().split(" - ")[0];
 
             ChiTietHoaDonNhap ct = new ChiTietHoaDonNhap("", hdn.getMaHDN(), maSP, soLuong, donGia);
@@ -88,8 +96,8 @@ public class ChiTietHoaDonNhapDialog extends JDialog {
             // Hiển thị thông báo để người dùng an tâm
             JOptionPane.showMessageDialog(this, "Nhập hàng thành công! Đã tự động cộng " + soLuong + " sản phẩm vào kho.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
             
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập SỐ hợp lệ (không chứa chữ cái) vào ô Số lượng và Đơn giá!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
             // In thẳng lỗi Database ra màn hình nếu có trục trặc
             JOptionPane.showMessageDialog(this, "Lỗi Database: " + ex.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);

@@ -74,12 +74,22 @@ public class TaiKhoanPanel extends JPanel {
         JButton btnClear = LuxuryTheme.createButton("Mới", Color.GRAY, Color.WHITE);
 
         btnAdd.addActionListener(e -> {
-            dao.themTaiKhoan(taoDataTuForm()); refreshForm();
-            JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
+            if (!validateForm()) return;
+            try {
+                dao.themTaiKhoan(taoDataTuForm()); refreshForm();
+                JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         btnEdit.addActionListener(e -> {
-            dao.capNhatToanBoTaiKhoan(taoDataTuForm()); refreshForm();
+            if (!validateForm()) return;
+            try {
+                dao.capNhatToanBoTaiKhoan(taoDataTuForm()); refreshForm();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         btnDelete.addActionListener(e -> {
@@ -109,7 +119,7 @@ public class TaiKhoanPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchAccounts());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -145,8 +155,32 @@ public class TaiKhoanPanel extends JPanel {
         if(cbNhanVien.getSelectedItem() != null && !cbNhanVien.getSelectedItem().toString().contains("Trống")) {
              maNV = cbNhanVien.getSelectedItem().toString().split(" - ")[0];
         }
-        return new TaiKhoan(txtMaTK.getText(), txtUsername.getText(), txtPassword.getText(), 
+        return new TaiKhoan(txtMaTK.getText(), txtUsername.getText().trim(), txtPassword.getText(), 
                             cbVaiTro.getSelectedItem().toString(), maNV);
+    }
+
+    private boolean validateForm() {
+        String username = txtUsername.getText().trim();
+        String password = txtPassword.getText();
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập và mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (!UsernameValidator.isValid(username)) {
+            JOptionPane.showMessageDialog(this, UsernameValidator.message(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (!ValidationUtils.isValidPassword(password)) {
+            JOptionPane.showMessageDialog(this, ValidationUtils.passwordMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        for (TaiKhoan tk : dao.getAllTaiKhoan()) {
+            if (tk.getTenDangNhap().equalsIgnoreCase(username) && !tk.getMaTK().equals(txtMaTK.getText())) {
+                JOptionPane.showMessageDialog(this, "Tên đăng nhập đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+        return true;
     }
 
     private void refreshForm() {
@@ -157,6 +191,17 @@ public class TaiKhoanPanel extends JPanel {
         for(NhanVien nv : new NhanVienDAO().layTatCaNhanVien()) cbNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV());
         
         loadData(dao.getAllTaiKhoan());
+    }
+
+    private void searchAccounts() {
+        String keyword = txtSearch.getText().trim();
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.getAllTaiKhoan(), keyword,
+            TaiKhoan::getMaTK,
+            TaiKhoan::getTenDangNhap,
+            TaiKhoan::getMaNV,
+            TaiKhoan::getVaiTro
+        ));
     }
 
     private void loadData(List<TaiKhoan> data) {

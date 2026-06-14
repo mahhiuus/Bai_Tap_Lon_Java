@@ -79,6 +79,21 @@ public class KhachHangDAO {
         }
     }
 
+    public void congDiemTichLuy(String maKH, int soDiem) {
+        if (maKH == null || maKH.trim().isEmpty() || soDiem <= 0) {
+            return;
+        }
+        String sql = "UPDATE khach_hang SET diem_tich_luy = diem_tich_luy + ? WHERE ma_kh = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, soDiem);
+            stmt.setString(2, maKH);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi khi cộng điểm tích lũy: " + e.getMessage(), e);
+        }
+    }
+
     public List<KhachHang> getAllKhachHang() {
         List<KhachHang> list = new ArrayList<>();
         String sql = "SELECT * FROM khach_hang";

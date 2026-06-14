@@ -75,11 +75,37 @@ public class LoginUI extends JFrame {
                 new EmptyBorder(12, 16, 12, 16)
         ));
         txtPass.setAlignmentX(Component.LEFT_ALIGNMENT);
+        char defaultEchoChar = txtPass.getEchoChar();
+
+        JPanel passwordPanel = new JPanel(new BorderLayout());
+        passwordPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
+        passwordPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        passwordPanel.setBorder(new LineBorder(new Color(200, 200, 200), 1));
+        passwordPanel.setBackground(Color.WHITE);
+
+        txtPass.setBorder(new EmptyBorder(12, 16, 12, 8));
+        JButton btnTogglePass = new JButton(FontAwesomeIcon.of("eye", mainColor, 20));
+        btnTogglePass.setPreferredSize(new Dimension(48, 52));
+        btnTogglePass.setBackground(Color.WHITE);
+        btnTogglePass.setFocusPainted(false);
+        btnTogglePass.setBorderPainted(false);
+        btnTogglePass.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnTogglePass.setToolTipText("Hiện/ẩn mật khẩu");
+        final boolean[] passwordVisible = {false};
+        btnTogglePass.addActionListener(e -> {
+            passwordVisible[0] = !passwordVisible[0];
+            txtPass.setEchoChar(passwordVisible[0] ? (char) 0 : defaultEchoChar);
+            btnTogglePass.setIcon(FontAwesomeIcon.of(passwordVisible[0] ? "eye-slash" : "eye", mainColor, 20));
+        });
+        passwordPanel.add(txtPass, BorderLayout.CENTER);
+        passwordPanel.add(btnTogglePass, BorderLayout.EAST);
 
         JButton btnLogin = new JButton("Login");
         btnLogin.setFont(new Font("Arial", Font.BOLD, 18));
         btnLogin.setForeground(Color.WHITE);
         btnLogin.setBackground(mainColor);
+        btnLogin.setIcon(FontAwesomeIcon.of("login", Color.WHITE, 18));
+        btnLogin.setIconTextGap(10);
         btnLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
         btnLogin.setFocusPainted(false);
         btnLogin.setBorderPainted(false);
@@ -102,8 +128,24 @@ public class LoginUI extends JFrame {
                     return;
                 }
 
-                TaiKhoanDAO dao = new TaiKhoanDAO();
-                model.TaiKhoan tk = dao.dangNhap(username, password);
+                if (!ValidationUtils.isValidPassword(password)) {
+                    JOptionPane.showMessageDialog(LoginUI.this, ValidationUtils.passwordMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (!UsernameValidator.isValid(username)) {
+                    JOptionPane.showMessageDialog(LoginUI.this, UsernameValidator.message(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                model.TaiKhoan tk;
+                try {
+                    TaiKhoanDAO dao = new TaiKhoanDAO();
+                    tk = dao.dangNhap(username, password);
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(LoginUI.this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
                 if (tk != null) {
                     SessionManager.DangNhap(tk);
@@ -161,7 +203,7 @@ public class LoginUI extends JFrame {
         rightPanel.add(Box.createVerticalStrut(20));
         rightPanel.add(lblPass);
         rightPanel.add(Box.createVerticalStrut(8));
-        rightPanel.add(txtPass);
+        rightPanel.add(passwordPanel);
         rightPanel.add(Box.createVerticalStrut(30));
         rightPanel.add(btnLogin);
         rightPanel.add(Box.createVerticalStrut(15));
@@ -181,6 +223,7 @@ public class LoginUI extends JFrame {
     public static void main(String[] args) {
         new LoginUI().setVisible(true);
     }
+
 }
 
 class ImagePanel extends JPanel {

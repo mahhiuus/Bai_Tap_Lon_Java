@@ -183,7 +183,7 @@ public class NhanVienPanel extends JPanel {
         txtSearch = LuxuryTheme.createTextField(); txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchNhanVien());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -245,6 +245,17 @@ public class NhanVienPanel extends JPanel {
         updateTableDisplay();
     }
 
+    private void searchNhanVien() {
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.layTatCaNhanVien(), txtSearch.getText().trim(),
+            NhanVien::getMaNV,
+            NhanVien::getTenNV,
+            NhanVien::getSoDienThoai,
+            NhanVien::getGioiTinh,
+            NhanVien::getChucVu
+        ));
+    }
+
     private void updateTableDisplay() {
         tableModel.setRowCount(0);
         if (allData == null || allData.isEmpty()) {
@@ -272,8 +283,7 @@ public class NhanVienPanel extends JPanel {
             return false;
         }
         
-        // Check if name contains only letters and spaces
-        if (!tenNV.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+        if (!ValidationUtils.isPersonName(tenNV)) {
             JOptionPane.showMessageDialog(this, "Tên chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
@@ -283,9 +293,26 @@ public class NhanVienPanel extends JPanel {
             return false;
         }
         
-        if (sdt.length() != 10) {
+        if (!ValidationUtils.isPhone(sdt)) {
             JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
+        }
+
+        if (dateChooser.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày sinh!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        LocalDate ngaySinh = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        if (!ngaySinh.isBefore(LocalDate.now())) {
+            JOptionPane.showMessageDialog(this, "Ngày sinh phải nhỏ hơn ngày hiện tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        for (NhanVien nv : dao.layTatCaNhanVien()) {
+            if (nv.getSoDienThoai() != null && nv.getSoDienThoai().equals(sdt) && !nv.getMaNV().equals(txtMaNV.getText())) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại nhân viên đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
         }
         
         return true;

@@ -85,6 +85,8 @@ public class MainDashboardUI extends JFrame {
             btnMenu.setFont(new Font("Arial", Font.BOLD, 16));
             btnMenu.setForeground(LuxuryTheme.CREAM);
             btnMenu.setBackground(LuxuryTheme.NAVY);
+            btnMenu.setIcon(FontAwesomeIcon.forMenu(item, LuxuryTheme.CREAM, 18));
+            btnMenu.setIconTextGap(12);
             btnMenu.setFocusPainted(false);
             btnMenu.setBorderPainted(false);
             btnMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -146,6 +148,7 @@ public class MainDashboardUI extends JFrame {
 
     private void setActiveTab(JButton btn) {
         btn.setForeground(LuxuryTheme.GOLD);
+        btn.setIcon(FontAwesomeIcon.forMenu(btn.getText(), LuxuryTheme.GOLD, 18));
         btn.setBackground(new Color(20, 40, 80));
         btn.setBorder(new CompoundBorder(
                 new MatteBorder(0, 6, 0, 0, LuxuryTheme.GOLD), 
@@ -156,6 +159,7 @@ public class MainDashboardUI extends JFrame {
     private void resetAllTabs() {
         for (JButton btn : menuButtons) {
             btn.setForeground(LuxuryTheme.CREAM);
+            btn.setIcon(FontAwesomeIcon.forMenu(btn.getText(), LuxuryTheme.CREAM, 18));
             btn.setBackground(LuxuryTheme.NAVY);
             btn.setBorder(new EmptyBorder(15, 45, 15, 0));
         }

@@ -143,6 +143,7 @@ public class SanPhamPanel extends JPanel {
 
         btnAdd.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 SanPham sp = taoSanPhamTuForm();
                 dao.themSanPham(sp);
                 refreshForm();
@@ -152,6 +153,7 @@ public class SanPhamPanel extends JPanel {
 
         btnEdit.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 SanPham sp = taoSanPhamTuForm();
                 dao.capNhatSanPham(sp);
                 refreshForm();
@@ -302,13 +304,40 @@ public class SanPhamPanel extends JPanel {
     private SanPham taoSanPhamTuForm() {
         SanPham sp = new SanPham();
         sp.setMaSP(txtMaSP.getText());
-        sp.setTenSP(txtTenSP.getText());
+        sp.setTenSP(txtTenSP.getText().trim());
         sp.setLoaiSP(cbLoai.getSelectedItem().toString());
-        sp.setGiaBan(Double.parseDouble(txtGiaBan.getText().trim()));
-        sp.setSoLuongTon(Integer.parseInt(txtSoLuong.getText().trim()));
+        sp.setGiaBan(ValidationUtils.parsePositiveMoney(txtGiaBan.getText(), "Giá bán"));
+        sp.setSoLuongTon(ValidationUtils.parseNonNegativeInt(txtSoLuong.getText(), "Số lượng tồn"));
         sp.setMaNCC(cbNhaCungCap.getSelectedItem().toString().split(" - ")[0]);
         sp.setHinhAnh(luuAnhVaoProject(selectedFileToCopy));
         return sp;
+    }
+
+    private boolean validateForm() {
+        String tenSP = txtTenSP.getText().trim();
+        if (tenSP.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên sản phẩm!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (cbNhaCungCap.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhà cung cấp!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        try {
+            ValidationUtils.parsePositiveMoney(txtGiaBan.getText(), "Giá bán");
+            ValidationUtils.parseNonNegativeInt(txtSoLuong.getText(), "Số lượng tồn");
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        for (SanPham sp : dao.getAllSanPham()) {
+            if (sp.getMaSP().equals(txtMaSP.getText())) continue;
+            if (FuzzySearch.normalize(sp.getTenSP()).equals(FuzzySearch.normalize(tenSP))) {
+                JOptionPane.showMessageDialog(this, "Tên sản phẩm đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+        }
+        return true;
     }
 
     private JLabel createLabel(String text) {
@@ -327,10 +356,20 @@ public class SanPhamPanel extends JPanel {
             return;
         }
 
-        allData = dao.timKiem(keyword, loai);
-        if (allData == null) {
-            allData = new java.util.ArrayList<>();
+        List<SanPham> source = dao.getAllSanPham();
+        if (!"Tất cả".equals(loai)) {
+            List<SanPham> byCategory = new java.util.ArrayList<>();
+            for (SanPham sp : source) {
+                if (loai.equals(sp.getLoaiSP())) byCategory.add(sp);
+            }
+            source = byCategory;
         }
+        allData = FuzzySearch.filter(source, keyword,
+            SanPham::getMaSP,
+            SanPham::getTenSP,
+            SanPham::getLoaiSP,
+            SanPham::getMaNCC
+        );
 
         phanTrang.setCurrentPage(1);
         phanTrang.setTotalItems(allData.size());

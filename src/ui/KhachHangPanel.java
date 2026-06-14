@@ -152,6 +152,12 @@ public class KhachHangPanel extends JPanel {
                 kh.setMaKH(txtMaKH.getText());
                 kh.setTenKH(txtTenKH.getText().trim());
                 kh.setSdt(txtSdt.getText().trim());
+                KhachHang current = dao.timTheoMaKhachHang(txtMaKH.getText());
+                if (current != null) {
+                    kh.setDiemTichLuy(current.getDiemTichLuy());
+                    kh.setNgayDangKy(current.getNgayDangKy());
+                    kh.setDiaChi(current.getDiaChi());
+                }
                 
                 dao.capNhatKhachHang(kh);
                 refreshForm();
@@ -190,7 +196,7 @@ public class KhachHangPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadDataToTable(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchKhachHang());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -252,6 +258,15 @@ public class KhachHangPanel extends JPanel {
         updateTableDisplay();
     }
 
+    private void searchKhachHang() {
+        phanTrang.setCurrentPage(1);
+        loadDataToTable(FuzzySearch.filter(dao.getAllKhachHang(), txtSearch.getText().trim(),
+            KhachHang::getMaKH,
+            KhachHang::getTenKH,
+            KhachHang::getSdt
+        ));
+    }
+
     private void updateTableDisplay() {
         tableModel.setRowCount(0); 
         if (allKhachHang == null || allKhachHang.isEmpty()) {
@@ -280,8 +295,7 @@ public class KhachHangPanel extends JPanel {
             return false;
         }
         
-        // Check if name contains only letters and spaces
-        if (!tenKH.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+        if (!ValidationUtils.isPersonName(tenKH)) {
             JOptionPane.showMessageDialog(this, "Tên chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
@@ -291,9 +305,16 @@ public class KhachHangPanel extends JPanel {
             return false;
         }
         
-        if (sdt.length() != 10) {
+        if (!ValidationUtils.isPhone(sdt)) {
             JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
+        }
+
+        for (KhachHang kh : dao.getAllKhachHang()) {
+            if (kh.getSdt() != null && kh.getSdt().equals(sdt) && !kh.getMaKH().equals(txtMaKH.getText())) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại khách hàng đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
         }
         
         return true;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.TaiKhoan;
+import ui.ValidationUtils;
 
 public class TaiKhoanDAO {
     public String sinhMaMoi() {
@@ -45,6 +46,9 @@ public class TaiKhoanDAO {
         if (tk == null || tk.getTenDangNhap() == null || tk.getTenDangNhap().trim().isEmpty() 
                 || tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
             throw new IllegalArgumentException("Tài khoản hoặc các trường bắt buộc không được để trống");
+        }
+        if (!ValidationUtils.isValidPassword(tk.getMatKhau())) {
+            throw new IllegalArgumentException(ValidationUtils.passwordMessage());
         }
         String sql = "INSERT INTO tai_khoan (ma_tk, ten_dang_nhap, mat_khau, vai_tro, ma_nv) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -134,6 +138,9 @@ public class TaiKhoanDAO {
             stmt.setString(2, matKhau);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
+                if (!tenDangNhap.equals(rs.getString("ten_dang_nhap")) || !matKhau.equals(rs.getString("mat_khau"))) {
+                    return null;
+                }
                 return new TaiKhoan(
                     rs.getString("ma_tk"),
                     rs.getString("ten_dang_nhap"),
@@ -232,6 +239,9 @@ public class TaiKhoanDAO {
 
     // Phương thức đặt lại mật khẩu bằng tên đăng nhập (Dùng cho ForgotPasswordUI)
     public boolean datLaiMatKhau(String tenDangNhap, String matKhauMoi) {
+        if (!ValidationUtils.isValidPassword(matKhauMoi)) {
+            throw new IllegalArgumentException(ValidationUtils.passwordMessage());
+        }
         String sql = "UPDATE tai_khoan SET mat_khau = ? WHERE ten_dang_nhap = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -254,6 +264,9 @@ public class TaiKhoanDAO {
     
     // Phương thức cập nhật toàn bộ thông tin tài khoản (Dành cho chức năng Sửa trên UI)
     public void capNhatToanBoTaiKhoan(TaiKhoan tk) {
+        if (!ValidationUtils.isValidPassword(tk.getMatKhau())) {
+            throw new IllegalArgumentException(ValidationUtils.passwordMessage());
+        }
         String sql = "UPDATE tai_khoan SET ten_dang_nhap = ?, mat_khau = ?, vai_tro = ?, ma_nv = ? WHERE ma_tk = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

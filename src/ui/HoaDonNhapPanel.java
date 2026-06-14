@@ -124,6 +124,7 @@ public class HoaDonNhapPanel extends JPanel {
 
         btnAdd.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 HoaDonNhap hdn = taoHoaDonNhapTuForm();
                 dao.themHoaDonNhap(hdn);
                 refreshForm();
@@ -140,6 +141,7 @@ public class HoaDonNhapPanel extends JPanel {
         btnNhapHang.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row < 0) { JOptionPane.showMessageDialog(this, "Vui lòng Chọn 1 Phiếu ở bảng để Nhập hàng!"); return; }
+            if (!validateForm()) return;
             HoaDonNhap hdn = taoHoaDonNhapTuForm();
             Window w = SwingUtilities.getWindowAncestor(this);
             ChiTietHoaDonNhapDialog d = new ChiTietHoaDonNhapDialog((Frame)w, hdn);
@@ -288,6 +290,27 @@ public class HoaDonNhapPanel extends JPanel {
         return hdn;
     }
 
+    private boolean validateForm() {
+        if (cbNhaCungCap.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhà cung cấp!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (cbNhanVien.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên nhập!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (dateChooser.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày nhập!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        LocalDate ngayNhap = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        if (ngayNhap.isAfter(LocalDate.now())) {
+            JOptionPane.showMessageDialog(this, "Ngày nhập không được lớn hơn ngày hiện tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
     private JPanel createTableAndSearchPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setOpaque(false);
@@ -315,7 +338,7 @@ public class HoaDonNhapPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadData(dao.timKiemTheoMa(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchHoaDonNhap());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -379,6 +402,11 @@ public class HoaDonNhapPanel extends JPanel {
         
         LocalDate ldFrom = dateFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate ldTo = dateTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (ldFrom.isAfter(ldTo)) {
+            JOptionPane.showMessageDialog(this, "Ngày bắt đầu không được sau ngày kết thúc!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         
         List<HoaDonNhap> filtered = dao.getAllHoaDonNhap();
         List<HoaDonNhap> result = new ArrayList<>();
@@ -404,6 +432,15 @@ public class HoaDonNhapPanel extends JPanel {
         allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
+    }
+
+    private void searchHoaDonNhap() {
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.getAllHoaDonNhap(), txtSearch.getText().trim(),
+            HoaDonNhap::getMaHDN,
+            HoaDonNhap::getMaNCC,
+            HoaDonNhap::getMaNV
+        ));
     }
 
     // --- CẬP NHẬT: LOGIC HIỂN THỊ DỮ LIỆU BẢNG & TÍNH TỔNG TIỀN ---

@@ -3,6 +3,7 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -50,7 +51,7 @@ public class ThongKeUI extends JPanel {
         centerArea.setBackground(LuxuryTheme.CREAM);
 
         // --- 4 THẺ SỐ LIỆU TỪ DATABASE THEO STYLE LUXURY ---
-        JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 25, 0)); // Nới rộng khe hở giữa 4 thẻ
+        JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 25, 15)); // Nới rộng khe hở giữa 4 thẻ
         cardsPanel.setBackground(LuxuryTheme.CREAM);
 
         // Tính toán các thông số
@@ -63,10 +64,16 @@ public class ThongKeUI extends JPanel {
         String lnThangNay = currencyFormat.format(loiNhuan); 
         String banHoatDong = String.valueOf(thongKeDao.getSoBanDangHoatDong());
 
-        cardsPanel.add(createStatCard("Doanh thu tháng", dtThangNay,"💰" ));
-        cardsPanel.add(createStatCard("Lợi nhuận gộp", lnThangNay, "📈")); 
-        cardsPanel.add(createStatCard("Số hóa đơn tháng", hdThangNay, "📄"));
-        cardsPanel.add(createStatCard("Bàn đang hoạt động", banHoatDong, "🎱"));
+        cardsPanel.add(createStatCard("Doanh thu tháng", dtThangNay, "money"));
+        cardsPanel.add(createStatCard("Lợi nhuận gộp", lnThangNay, "chart-line")); 
+        cardsPanel.add(createStatCard("Số hóa đơn tháng", hdThangNay, "file-invoice"));
+        cardsPanel.add(createStatCard("Bàn đang hoạt động", banHoatDong, "billiard"));
+        cardsPanel.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent e) {
+                updateCardsLayout(cardsPanel);
+            }
+        });
+        updateCardsLayout(cardsPanel);
         
         centerArea.add(cardsPanel, BorderLayout.NORTH);
 
@@ -113,6 +120,10 @@ public class ThongKeUI extends JPanel {
             try {
                 LocalDate start = LocalDate.parse(txtTuNgay.getText().trim(), dtf);
                 LocalDate end = LocalDate.parse(txtDenNgay.getText().trim(), dtf);
+                if (start.isAfter(end)) {
+                    JOptionPane.showMessageDialog(this, "Từ ngày không được sau đến ngày!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 loadChartDataNgay(start, end);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Vui lòng nhập ngày đúng định dạng dd/MM/yyyy!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -234,13 +245,24 @@ public class ThongKeUI extends JPanel {
         return chart;
     }
 
+    private void updateCardsLayout(JPanel cardsPanel) {
+        int columns = cardsPanel.getWidth() < 1050 ? 2 : 4;
+        LayoutManager currentLayout = cardsPanel.getLayout();
+        if (currentLayout instanceof GridLayout) {
+            GridLayout grid = (GridLayout) currentLayout;
+            if (grid.getColumns() == columns) return;
+        }
+        cardsPanel.setLayout(new GridLayout(0, columns, 25, 15));
+        cardsPanel.revalidate();
+    }
+
     private JPanel createStatCard(String title, String value, String fontAwesomeIcon) {
         // --- THAY VÌ JPANEL BÌNH THƯỜNG, DÙNG CLASS ĐỔ BÓNG BO GÓC ---
-        ShadowRoundedPanel card = new ShadowRoundedPanel(new BorderLayout(), 15);
+        ShadowRoundedPanel card = new ShadowRoundedPanel(new BorderLayout(14, 0), 15);
         card.setBackground(Color.WHITE);
         
         // Tăng padding để đẩy nội dung tách khỏi viền bóng
-        card.setBorder(new EmptyBorder(25, 30, 25, 30));
+        card.setBorder(new EmptyBorder(24, 26, 24, 24));
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -251,18 +273,18 @@ public class ThongKeUI extends JPanel {
         lblTitle.setForeground(new Color(120, 120, 120)); // Xám thanh lịch
 
         JLabel lblValue = new JLabel(value);
-        lblValue.setFont(new Font("Arial", Font.BOLD, 26)); // To và rõ hơn
+        lblValue.setFont(new Font("Arial", Font.BOLD, value.length() > 10 ? 23 : 26)); // To và rõ hơn
         lblValue.setForeground(LuxuryTheme.NAVY); 
 
         textPanel.add(lblTitle);
         textPanel.add(Box.createVerticalStrut(8));
         textPanel.add(lblValue);
 
-        JLabel lblIcon = new JLabel(fontAwesomeIcon);
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 36)); // Icon to hơn
-        lblIcon.setForeground(LuxuryTheme.GOLD);
+        JLabel lblIcon = new JLabel(FontAwesomeIcon.of(fontAwesomeIcon, LuxuryTheme.GOLD, 38));
+        lblIcon.setPreferredSize(new Dimension(46, 52));
+        lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
 
-        card.add(textPanel, BorderLayout.WEST);
+        card.add(textPanel, BorderLayout.CENTER);
         card.add(lblIcon, BorderLayout.EAST);
 
         return card;

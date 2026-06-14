@@ -109,7 +109,7 @@ public class HoaDonBanPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchHoaDonBan());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -177,6 +177,16 @@ public class HoaDonBanPanel extends JPanel {
         updateTableDisplay();
     }
 
+    private void searchHoaDonBan() {
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.getAllHoaDonBan(), txtSearch.getText().trim(),
+            HoaDonBan::getMaHDB,
+            HoaDonBan::getMaPhien,
+            HoaDonBan::getMaKH,
+            HoaDonBan::getMaNV
+        ));
+    }
+
     private void updateTableDisplay() {
         tableModel.setRowCount(0);
         double tongDoanhThuTrang = 0;
@@ -195,7 +205,7 @@ public class HoaDonBanPanel extends JPanel {
             String ngayBanStr = hdb.getNgayBan() != null ? hdb.getNgayBan().format(formatter) : "";
             
             tableModel.addRow(new Object[]{
-                hdb.getMaHDB(), hdb.getMaPhien(), hdb.getMaKH(), hdb.getMaNV(), ngayBanStr,
+                hdb.getMaHDB(), hdb.getMaPhien(), hdb.getMaKH() != null ? hdb.getMaKH() : "Khách vãng lai", hdb.getMaNV(), ngayBanStr,
                 String.format("%,.0f", hdb.getTienBida()), String.format("%,.0f", hdb.getTienSanPham()), String.format("%,.0f", hdb.getTongTien())
             });
             tongDoanhThuTrang += hdb.getTongTien();
@@ -215,6 +225,11 @@ public class HoaDonBanPanel extends JPanel {
         
         LocalDate ldFrom = dateFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate ldTo = dateTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (ldFrom.isAfter(ldTo)) {
+            JOptionPane.showMessageDialog(this, "Ngày bắt đầu không được sau ngày kết thúc!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         
         List<HoaDonBan> filtered = dao.getAllHoaDonBan();
         List<HoaDonBan> result = new ArrayList<>();
@@ -258,11 +273,18 @@ public class HoaDonBanPanel extends JPanel {
         if (row < 0) { JOptionPane.showMessageDialog(this, "Vui lòng chọn một Hóa Đơn trong bảng để in!"); return; }
 
         String maHDB = table.getValueAt(row, 0).toString();
-        String maKH = table.getValueAt(row, 2).toString();
+        String maKH = String.valueOf(table.getValueAt(row, 2));
         String maNV = table.getValueAt(row, 3).toString();
         String ngayBan = table.getValueAt(row, 4).toString();
         String tienBidaStr = table.getValueAt(row, 5).toString();
+        String tienSanPhamStr = table.getValueAt(row, 6).toString();
         String tongTienStr = table.getValueAt(row, 7).toString();
+        double tienBidaValue = Double.parseDouble(tienBidaStr.replace(",", ""));
+        double tienSanPhamValue = Double.parseDouble(tienSanPhamStr.replace(",", ""));
+        double tongTruocGiam = tienBidaValue + tienSanPhamValue;
+        double tongThanhToan = Double.parseDouble(tongTienStr.replace(",", ""));
+        double tienGiam = Math.max(0, tongTruocGiam - tongThanhToan);
+        int phanTramGiam = tongTruocGiam > 0 ? (int) Math.round(tienGiam * 100.0 / tongTruocGiam) : 0;
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Chọn nơi lưu Hóa Đơn PDF");
@@ -313,7 +335,8 @@ public class HoaDonBanPanel extends JPanel {
                     }
                 }
                 document.add(pdfTable); document.add(new Paragraph("----------------------------------------------------------------", fontNormal));
-                Paragraph tong = new Paragraph("TỔNG THANH TOÁN: " + tongTienStr + " VNĐ", new Font(bf, 14, Font.BOLD, BaseColor.RED));
+                document.add(new Paragraph("Giảm giá: " + phanTramGiam + "% (-" + String.format("%,.0f VNĐ", tienGiam) + ")", fontNormal));
+                Paragraph tong = new Paragraph("Tổng thanh toán: " + tongTienStr + " VNĐ", new Font(bf, 14, Font.BOLD, BaseColor.RED));
                 tong.setAlignment(Element.ALIGN_RIGHT); document.add(tong);
                 Paragraph thanks = new Paragraph("\nXin cảm ơn quý khách và hẹn gặp lại!", fontInfo);
                 thanks.setAlignment(Element.ALIGN_CENTER); document.add(thanks);

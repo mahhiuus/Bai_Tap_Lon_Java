@@ -122,6 +122,16 @@ public class RegisterUI extends JFrame {
                     return;
                 }
 
+                if (!UsernameValidator.isValid(username)) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, UsernameValidator.message(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (!ValidationUtils.isValidPassword(password)) {
+                    JOptionPane.showMessageDialog(RegisterUI.this, ValidationUtils.passwordMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
                 // 2. Kiểm tra mật khẩu khớp nhau
                 if (!password.equals(confirmPass)) {
                     JOptionPane.showMessageDialog(RegisterUI.this, "Mật khẩu xác nhận không khớp!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -131,7 +141,16 @@ public class RegisterUI extends JFrame {
                 TaiKhoanDAO dao = new TaiKhoanDAO();
 
                 // 3. Kiểm tra trùng lặp tên đăng nhập
-                if (dao.kiemTraTenDangNhapTonTai(username)) {
+                boolean usernameExists = dao.kiemTraTenDangNhapTonTai(username);
+                if (!usernameExists) {
+                    for (TaiKhoan existing : dao.getAllTaiKhoan()) {
+                        if (existing.getTenDangNhap().equalsIgnoreCase(username)) {
+                            usernameExists = true;
+                            break;
+                        }
+                    }
+                }
+                if (usernameExists) {
                     JOptionPane.showMessageDialog(RegisterUI.this, "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;
                 }

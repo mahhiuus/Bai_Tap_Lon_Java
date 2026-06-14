@@ -119,7 +119,7 @@ public class NhaCungCapPanel extends JPanel {
         btnAdd.addActionListener(e -> {
             try {
                 if (!validateForm()) return;
-                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
+                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText().trim(), txtSDT.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(), txtNguoiLienHe.getText().trim());
                 dao.themNhaCungCap(ncc);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Thêm thành công!");
@@ -129,7 +129,7 @@ public class NhaCungCapPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             try {
                 if (!validateForm()) return;
-                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText(), txtSDT.getText(), txtDiaChi.getText(), txtEmail.getText(), txtNguoiLienHe.getText());
+                NhaCungCap ncc = new NhaCungCap(txtMaNCC.getText(), txtTenCongTy.getText().trim(), txtSDT.getText().trim(), txtDiaChi.getText().trim(), txtEmail.getText().trim(), txtNguoiLienHe.getText().trim());
                 dao.capNhatNhaCungCap(ncc);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -168,7 +168,7 @@ public class NhaCungCapPanel extends JPanel {
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
         
-        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchNhaCungCap());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -223,6 +223,18 @@ public class NhaCungCapPanel extends JPanel {
         updateTableDisplay();
     }
 
+    private void searchNhaCungCap() {
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.getAllNhaCungCap(), txtSearch.getText().trim(),
+            NhaCungCap::getMaNCC,
+            NhaCungCap::getTenCongTy,
+            NhaCungCap::getSdt,
+            NhaCungCap::getDiaChi,
+            NhaCungCap::getEmail,
+            NhaCungCap::getNguoiLienHe
+        ));
+    }
+
     private void updateTableDisplay() {
         tableModel.setRowCount(0);
         if (allData == null || allData.isEmpty()) {
@@ -242,6 +254,7 @@ public class NhaCungCapPanel extends JPanel {
     private boolean validateForm() {
         String tenCongTy = txtTenCongTy.getText().trim();
         String sdt = txtSDT.getText().trim();
+        String diaChi = txtDiaChi.getText().trim();
         String email = txtEmail.getText().trim();
         String nguoiLienHe = txtNguoiLienHe.getText().trim();
         
@@ -250,19 +263,18 @@ public class NhaCungCapPanel extends JPanel {
             return false;
         }
         
-        // Check if company name contains only letters and spaces
-        if (!tenCongTy.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
-            JOptionPane.showMessageDialog(this, "Tên công ty chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-        
         if (sdt.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
         
-        if (sdt.length() != 10) {
+        if (!ValidationUtils.isPhone(sdt)) {
             JOptionPane.showMessageDialog(this, "Số điện thoại phải đúng 10 chữ số!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        if (diaChi.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập địa chỉ!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
         
@@ -271,9 +283,8 @@ public class NhaCungCapPanel extends JPanel {
             return false;
         }
         
-        // Check email format: letters/numbers + @gmail.com
-        if (!email.matches("[a-zA-Z0-9]+@gmail\\.com")) {
-            JOptionPane.showMessageDialog(this, "Email phải có định dạng: kí tự/số@gmail.com", "Lỗi", JOptionPane.WARNING_MESSAGE);
+        if (!ValidationUtils.isEmail(email)) {
+            JOptionPane.showMessageDialog(this, "Email không đúng định dạng!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
         
@@ -282,10 +293,25 @@ public class NhaCungCapPanel extends JPanel {
             return false;
         }
         
-        // Check if contact name contains only letters and spaces
-        if (!nguoiLienHe.matches("[a-zA-Z\\s\\u0080-\\uFFFF]*")) {
+        if (!ValidationUtils.isPersonName(nguoiLienHe)) {
             JOptionPane.showMessageDialog(this, "Tên người liên hệ chỉ được phép chứa chữ cái!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
+        }
+
+        for (NhaCungCap ncc : dao.getAllNhaCungCap()) {
+            if (ncc.getMaNCC().equals(txtMaNCC.getText())) continue;
+            if (FuzzySearch.normalize(ncc.getTenCongTy()).equals(FuzzySearch.normalize(tenCongTy))) {
+                JOptionPane.showMessageDialog(this, "Tên công ty đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+            if (ncc.getSdt() != null && ncc.getSdt().equals(sdt)) {
+                JOptionPane.showMessageDialog(this, "Số điện thoại nhà cung cấp đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+            if (ncc.getEmail() != null && ncc.getEmail().equalsIgnoreCase(email)) {
+                JOptionPane.showMessageDialog(this, "Email nhà cung cấp đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
         }
         
         return true;

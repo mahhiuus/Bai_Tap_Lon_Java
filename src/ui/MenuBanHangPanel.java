@@ -184,8 +184,20 @@ public class MenuBanHangPanel extends JPanel {
         if (key.isEmpty() && "TẤT CẢ".equalsIgnoreCase(category)) {
             dsSP = spDao.getAllSanPham();
         } else {
-            String searchCategory = "TẤT CẢ".equalsIgnoreCase(category) ? "Tất cả" : category;
-            dsSP = spDao.timKiem(key, searchCategory);
+            List<SanPham> source = spDao.getAllSanPham();
+            if (!"TẤT CẢ".equalsIgnoreCase(category)) {
+                List<SanPham> byCategory = new java.util.ArrayList<>();
+                for (SanPham sp : source) {
+                    if (category.equals(sp.getLoaiSP())) byCategory.add(sp);
+                }
+                source = byCategory;
+            }
+            dsSP = FuzzySearch.filter(source, key,
+                SanPham::getMaSP,
+                SanPham::getTenSP,
+                SanPham::getLoaiSP,
+                SanPham::getMaNCC
+            );
         }
 
         for (SanPham sp : dsSP) {

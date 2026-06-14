@@ -106,10 +106,26 @@ public class ForgotPasswordUI extends JFrame {
                 return;
             }
 
+            if (!UsernameValidator.isValid(username)) {
+                JOptionPane.showMessageDialog(this, UsernameValidator.message(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!ValidationUtils.isValidPassword(newPassword)) {
+                JOptionPane.showMessageDialog(this, ValidationUtils.passwordMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             TaiKhoanDAO dao = new TaiKhoanDAO();
             
             // Gọi hàm datLaiMatKhau vừa thêm
-            boolean isSuccess = dao.datLaiMatKhau(username, newPassword);
+            boolean isSuccess;
+            try {
+                isSuccess = dao.datLaiMatKhau(username, newPassword);
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             if (isSuccess) {
                 JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.", "Thành công", JOptionPane.INFORMATION_MESSAGE);

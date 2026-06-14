@@ -129,7 +129,15 @@ public class PhienChoiPanel extends JPanel {
         allData.clear();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
         for (PhienChoi p : dao.layTatCaPhien()) {
-            if (p.getMaPhien().contains(keyword)) {
+            String haystack = FuzzySearch.normalize(p.getMaPhien() + " " + p.getMaBan() + " " + p.getTrangThaiPhien());
+            boolean matched = true;
+            for (String term : FuzzySearch.normalize(keyword).trim().split("\\s+")) {
+                if (!term.isEmpty() && !haystack.contains(term)) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) {
                 String bd = p.getThoiGianBatDau() != null ? p.getThoiGianBatDau().format(fmt) : "";
                 String kt = p.getThoiGianKetThuc() != null ? p.getThoiGianKetThuc().format(fmt) : "Chưa xong";
                 allData.add(new Object[]{ p.getMaPhien(), p.getMaBan(), bd, kt, p.getTrangThaiPhien(), p.getSoPhutChoi() });

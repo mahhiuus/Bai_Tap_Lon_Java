@@ -84,11 +84,8 @@ public class BanBidaPanel extends JPanel {
 
         btnAdd.addActionListener(e -> {
             try {
+                if (!validateForm()) return;
                 String ten = txtTenBan.getText().trim();
-                if (ten.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Tên bàn không được để trống!");
-                    return;
-                }
                 BanBida ban = new BanBida(txtMaBan.getText(), ten, cbLoaiBan.getSelectedItem().toString(), "TRONG");
                 dao.themBan(ban);
                 refreshForm();
@@ -110,7 +107,8 @@ public class BanBidaPanel extends JPanel {
                 return;
             }
             
-            BanBida ban = new BanBida(txtMaBan.getText(), txtTenBan.getText(), cbLoaiBan.getSelectedItem().toString(), "TRONG");
+            if (!validateForm()) return;
+            BanBida ban = new BanBida(txtMaBan.getText(), txtTenBan.getText().trim(), cbLoaiBan.getSelectedItem().toString(), "TRONG");
             dao.capNhatBan(ban);
             refreshForm();
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -164,7 +162,7 @@ public class BanBidaPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         searchPanel.add(txtSearch);
         JButton btnSearch = LuxuryTheme.createButton("Tìm Kiếm", LuxuryTheme.GOLD, LuxuryTheme.NAVY);
-        btnSearch.addActionListener(e -> loadData(dao.timKiem(txtSearch.getText().trim())));
+        btnSearch.addActionListener(e -> searchBanBida());
         searchPanel.add(btnSearch);
         panel.add(searchPanel, BorderLayout.NORTH);
 
@@ -216,6 +214,33 @@ public class BanBidaPanel extends JPanel {
         allData = data;
         phanTrang.setTotalItems(allData.size());
         updateTableDisplay();
+    }
+
+    private void searchBanBida() {
+        phanTrang.setCurrentPage(1);
+        loadData(FuzzySearch.filter(dao.layTatCaBan(), txtSearch.getText().trim(),
+            BanBida::getMaBan,
+            BanBida::getTenBan,
+            BanBida::getLoaiBan,
+            BanBida::getTrangThaiBan
+        ));
+    }
+
+    private boolean validateForm() {
+        String ten = txtTenBan.getText().trim();
+        if (ten.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên bàn không được để trống!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        for (BanBida ban : dao.layTatCaBan()) {
+            if (ban.getTenBan() != null
+                    && FuzzySearch.normalize(ban.getTenBan()).equals(FuzzySearch.normalize(ten))
+                    && !ban.getMaBan().equals(txtMaBan.getText())) {
+                JOptionPane.showMessageDialog(this, "Tên bàn đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+        }
+        return true;
     }
 
     private void updateTableDisplay() {
