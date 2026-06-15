@@ -84,7 +84,13 @@ public class SanPhamPanel extends JPanel {
         txtGiaBan = LuxuryTheme.createTextField(); txtGiaBan.setText("0"); gbc.gridy = y++; form.add(txtGiaBan, gbc);
 
         gbc.gridy = y++; form.add(createLabel("Số Lượng Tồn:"), gbc);
-        txtSoLuong = LuxuryTheme.createTextField(); txtSoLuong.setText("0"); gbc.gridy = y++; form.add(txtSoLuong, gbc);
+        txtSoLuong = LuxuryTheme.createTextField();
+        txtSoLuong.setText("0");
+        txtSoLuong.setEnabled(false);
+        txtSoLuong.setDisabledTextColor(Color.DARK_GRAY);
+        txtSoLuong.setBackground(new Color(230, 230, 230));
+        txtSoLuong.setToolTipText("Tồn kho tự cập nhật khi nhập hàng, không chỉnh sửa tại đây.");
+        gbc.gridy = y++; form.add(txtSoLuong, gbc);
 
         gbc.gridy = y++; form.add(createLabel("Nhà Cung Cấp:"), gbc);
         cbNhaCungCap = new JComboBox<>(); 
@@ -144,7 +150,7 @@ public class SanPhamPanel extends JPanel {
         btnAdd.addActionListener(e -> {
             try {
                 if (!validateForm()) return;
-                SanPham sp = taoSanPhamTuForm();
+                SanPham sp = taoSanPhamTuForm(false);
                 dao.themSanPham(sp);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Thêm sản phẩm thành công!");
@@ -154,7 +160,7 @@ public class SanPhamPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             try {
                 if (!validateForm()) return;
-                SanPham sp = taoSanPhamTuForm();
+                SanPham sp = taoSanPhamTuForm(true);
                 dao.capNhatSanPham(sp);
                 refreshForm();
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -301,13 +307,18 @@ public class SanPhamPanel extends JPanel {
         for (NhaCungCap ncc : list) cbNhaCungCap.addItem(ncc.getMaNCC() + " - " + ncc.getTenCongTy());
     }
 
-    private SanPham taoSanPhamTuForm() {
+    private SanPham taoSanPhamTuForm(boolean giuNguyenTonKho) {
         SanPham sp = new SanPham();
         sp.setMaSP(txtMaSP.getText());
         sp.setTenSP(txtTenSP.getText().trim());
         sp.setLoaiSP(cbLoai.getSelectedItem().toString());
         sp.setGiaBan(ValidationUtils.parsePositiveMoney(txtGiaBan.getText(), "Giá bán"));
-        sp.setSoLuongTon(ValidationUtils.parseNonNegativeInt(txtSoLuong.getText(), "Số lượng tồn"));
+        if (giuNguyenTonKho) {
+            SanPham spCu = dao.layTheoId(txtMaSP.getText());
+            sp.setSoLuongTon(spCu != null ? spCu.getSoLuongTon() : 0);
+        } else {
+            sp.setSoLuongTon(0);
+        }
         sp.setMaNCC(cbNhaCungCap.getSelectedItem().toString().split(" - ")[0]);
         sp.setHinhAnh(luuAnhVaoProject(selectedFileToCopy));
         return sp;
@@ -325,7 +336,6 @@ public class SanPhamPanel extends JPanel {
         }
         try {
             ValidationUtils.parsePositiveMoney(txtGiaBan.getText(), "Giá bán");
-            ValidationUtils.parseNonNegativeInt(txtSoLuong.getText(), "Số lượng tồn");
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;

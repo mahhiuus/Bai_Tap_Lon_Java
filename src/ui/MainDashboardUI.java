@@ -82,7 +82,7 @@ public class MainDashboardUI extends JFrame {
         
         for (String item : menuItems) {
             JButton btnMenu = new JButton(item);
-            btnMenu.setFont(new Font("Arial", Font.BOLD, 16));
+            btnMenu.setFont(new Font("Arial", Font.BOLD, 14));
             btnMenu.setForeground(LuxuryTheme.CREAM);
             btnMenu.setBackground(LuxuryTheme.NAVY);
             btnMenu.setIcon(FontAwesomeIcon.forMenu(item, LuxuryTheme.CREAM, 18));
