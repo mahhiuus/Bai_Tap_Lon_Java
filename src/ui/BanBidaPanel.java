@@ -232,15 +232,20 @@ public class BanBidaPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Tên bàn không được để trống!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
+        String tenChuanHoa = chuanHoaTenBan(ten);
         for (BanBida ban : dao.layTatCaBan()) {
             if (ban.getTenBan() != null
-                    && FuzzySearch.normalize(ban.getTenBan()).equals(FuzzySearch.normalize(ten))
+                    && chuanHoaTenBan(ban.getTenBan()).equals(tenChuanHoa)
                     && !ban.getMaBan().equals(txtMaBan.getText())) {
-                JOptionPane.showMessageDialog(this, "Tên bàn đã tồn tại!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Tên bàn đã tồn tại, vui lòng nhập tên khác!", "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return false;
             }
         }
         return true;
+    }
+
+    private String chuanHoaTenBan(String tenBan) {
+        return FuzzySearch.normalize(tenBan).replaceAll("\\s+", " ").trim();
     }
 
     private void updateTableDisplay() {

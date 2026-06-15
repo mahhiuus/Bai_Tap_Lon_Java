@@ -391,7 +391,9 @@ public class MenuBanHangPanel extends JPanel {
         List<PhienChoi> ds = phienDao.layTatCaPhien();
         for (PhienChoi p : ds) {
             if ("DANG_CHOI".equals(p.getTrangThaiPhien())) {
-                cbPhienChoi.addItem(p.getMaPhien() + " - Bàn: " + p.getMaBan());
+                BanBida ban = banDao.timTheoMaBan(p.getMaBan());
+                String tenBan = ban != null ? ban.getTenBan() : p.getMaBan();
+                cbPhienChoi.addItem(p.getMaPhien() + " - " + tenBan);
             }
         }
         if (cbPhienChoi.getItemCount() == 0) cbPhienChoi.addItem("--- Chưa mở bàn ---");
@@ -403,7 +405,7 @@ public class MenuBanHangPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng mở một bàn trước!", "Lỗi", 2); return;
         }
 
-        String maPhien = cbPhienChoi.getSelectedItem().toString().split(" - ")[0];
+        String maPhien = layMaPhienDangChon();
         currentOrderList = ctDao.timTheoMaPhien(maPhien);
         boolean duplicate = false;
         
@@ -462,7 +464,7 @@ public class MenuBanHangPanel extends JPanel {
         if (cbPhienChoi.getSelectedItem() == null || cbPhienChoi.getSelectedItem().toString().contains("---")) {
             lblTongTien.setText("Tiền Đồ Ăn: 0 đ"); return;
         }
-        String maPhien = cbPhienChoi.getSelectedItem().toString().split(" - ")[0];
+        String maPhien = layMaPhienDangChon();
         currentOrderList = ctDao.timTheoMaPhien(maPhien);
         
         double tong = 0;
@@ -476,13 +478,11 @@ public class MenuBanHangPanel extends JPanel {
     }
 
     private void moThanhToan() {
-        if (cbPhienChoi.getSelectedItem().toString().contains("---")) return;
-        String combo = cbPhienChoi.getSelectedItem().toString();
-        String maPhien = combo.split(" - ")[0];
-        String maBan = combo.split("Bàn: ")[1];
+        if (cbPhienChoi.getSelectedItem() == null || cbPhienChoi.getSelectedItem().toString().contains("---")) return;
+        String maPhien = layMaPhienDangChon();
         
         PhienChoi p = phienDao.timTheoMaPhien(maPhien);
-        BanBida b = banDao.timTheoMaBan(maBan);
+        BanBida b = p != null ? banDao.timTheoMaBan(p.getMaBan()) : null;
         
         if (p != null && b != null) {
             Frame f = (Frame) SwingUtilities.getWindowAncestor(this);
@@ -494,6 +494,12 @@ public class MenuBanHangPanel extends JPanel {
                 loadProducts(currentCategory); 
             }
         }
+    }
+
+    private String layMaPhienDangChon() {
+        Object selected = cbPhienChoi.getSelectedItem();
+        if (selected == null) return "";
+        return selected.toString().split(" - ", 2)[0];
     }
 
     // =========================================================================
